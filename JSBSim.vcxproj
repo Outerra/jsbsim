@@ -1,6 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_dll|Itanium">
+      <Configuration>Debug_dll</Configuration>
+      <Platform>Itanium</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_dll|Win32">
+      <Configuration>Debug_dll</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_dll|x64">
+      <Configuration>Debug_dll</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Itanium">
       <Configuration>Debug</Configuration>
       <Platform>Itanium</Platform>
@@ -23,6 +35,18 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="JSBSim64|x64">
       <Configuration>JSBSim64</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_dll|Itanium">
+      <Configuration>Release_dll</Configuration>
+      <Platform>Itanium</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_dll|Win32">
+      <Configuration>Release_dll</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_dll|x64">
+      <Configuration>Release_dll</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Itanium">
@@ -48,7 +72,15 @@
     <ConfigurationType>Application</ConfigurationType>
     <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
   </PropertyGroup>
@@ -56,13 +88,26 @@
     <ConfigurationType>Application</ConfigurationType>
     <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <WholeProgramOptimization>PGOptimize</WholeProgramOptimization>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -71,52 +116,96 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">Debug_dll\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">Debug\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">Debug_dll\out\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Debug\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">Debug\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">Debug\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">Debug\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Release_dll\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Release\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Release_dll\out\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Release\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Release\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">Release\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">false</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">false</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">false</GenerateManifest>
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</EmbedManifest>
+    <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">false</EmbedManifest>
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</EmbedManifest>
+    <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">false</EmbedManifest>
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">false</EmbedManifest>
+    <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">false</EmbedManifest>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='JSBSim64|x64'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='JSBSim64|Itanium'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='JSBSim64|x64'">false</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='JSBSim64|Itanium'">false</GenerateManifest>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">$(ProjectName)_d</TargetName>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,6 +229,39 @@
     </ClCompile>
     <Link>
       <ShowProgress>LinkVerbose</ShowProgress>
+      <Version>1.0</Version>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;JSBSIM_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4996;4267;4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <CompileAsManaged>false</CompileAsManaged>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <ShowProgress>NotSet</ShowProgress>
       <Version>1.0</Version>
       <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -181,7 +303,69 @@
       </DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4996;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <CompileAsManaged>false</CompileAsManaged>
+    </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerbose</ShowProgress>
+      <Version>1.0</Version>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4996;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <CompileAsManaged>false</CompileAsManaged>
+    </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerbose</ShowProgress>
+      <Version>1.0</Version>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -254,6 +438,53 @@
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Xdcmake>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;JSBSIM_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <DisableSpecificWarnings>4251;</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <ShowProgress>NotSet</ShowProgress>
+      <Version>1.0 Release Candidate 3</Version>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Manifest>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <VerboseOutput>true</VerboseOutput>
+    </Manifest>
+    <Xdcmake>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+    </Xdcmake>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -296,7 +527,90 @@
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Xdcmake>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+    </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerbose</ShowProgress>
+      <Version>1.0 Release Candidate 3</Version>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <Manifest>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <VerboseOutput>true</VerboseOutput>
+    </Manifest>
+    <Xdcmake>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+    </Xdcmake>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+    </ClCompile>
+    <Link>
+      <ShowProgress>LinkVerbose</ShowProgress>
+      <Version>1.0 Release Candidate 3</Version>
+      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+    <Manifest>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <VerboseOutput>true</VerboseOutput>
+    </Manifest>
+    <Xdcmake>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+    </Xdcmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -383,6 +697,7 @@
     <ClInclude Include="src\input_output\fgoutputsocket.h" />
     <ClInclude Include="src\input_output\fgoutputtextfile.h" />
     <ClInclude Include="src\input_output\fgoutputtype.h" />
+    <ClInclude Include="src\JSBSim_api.h" />
     <ClInclude Include="src\math\LagrangeMultiplier.h" />
     <ClInclude Include="src\models\atmosphere\FGStandardAtmosphere.h" />
     <ClInclude Include="src\models\atmosphere\FGWinds.h" />
@@ -501,8 +816,11 @@
     <ClCompile Include="src\models\FGAerodynamics.cpp" />
     <ClCompile Include="src\models\FGAircraft.cpp">
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Speed</FavorSizeOrSpeed>
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Speed</FavorSizeOrSpeed>
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">Speed</FavorSizeOrSpeed>
     </ClCompile>
     <ClCompile Include="src\models\FGAtmosphere.cpp" />
     <ClCompile Include="src\models\FGAuxiliary.cpp" />
@@ -563,8 +881,11 @@
     <ClCompile Include="src\math\FGTable.cpp" />
     <ClCompile Include="src\models\propulsion\FGTank.cpp">
       <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Fast</FloatingPointModel>
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Fast</FloatingPointModel>
       <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Fast</FloatingPointModel>
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Fast</FloatingPointModel>
       <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Fast</FloatingPointModel>
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">Fast</FloatingPointModel>
     </ClCompile>
     <ClCompile Include="src\models\propulsion\FGThruster.cpp" />
     <ClCompile Include="src\initialization\FGTrim.cpp" />
@@ -592,33 +913,48 @@
     <None Include="systems\fg_glue.xml" />
     <CustomBuildStep Include="data_output\ground_reactions.xml">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="data_plot\ground_reactions.xml">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <None Include="systems\jsb_glue.xml" />
     <CustomBuildStep Include="JSBSim.dox">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <None Include="aircraft\ah1s\Makefile.am" />
     <CustomBuildStep Include="data_output\Makefile.am">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="data_plot\Makefile.am">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <None Include="aircraft\ah1s\reset00.xml" />
     <None Include="systems\rpm_governor.xml" />

@@ -40,6 +40,8 @@ INCLUDES
 #include "input_output/FGPropertyManager.h"
 #include "input_output/FGXMLElement.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -73,7 +75,7 @@ CLASS DOCUMENTATION
 DECLARATION: FGModelFunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGModelFunctions : public FGJSBBase
+class JSBSIM_API FGModelFunctions : public FGJSBBase
 {
 public:
   virtual ~FGModelFunctions();

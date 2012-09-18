@@ -44,6 +44,8 @@ INCLUDES
 #include "math/FGMatrix33.h"
 #include "math/FGLocation.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -106,7 +108,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAuxiliary : public FGModel {
+class JSBSIM_API FGAuxiliary : public FGModel {
 public:
   /** Constructor
       @param Executive a pointer to the parent executive object */

@@ -38,6 +38,8 @@ INCLUDES
 #include <string>
 #include "FGParameter.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -162,7 +164,7 @@ DECLARATION: FGFunction
 
 // Todo: Does this class need a copy constructor, like FGLGear?
 
-class FGFunction : public FGParameter
+class JSBSIM_API FGFunction : public FGParameter
 {
 public:
 

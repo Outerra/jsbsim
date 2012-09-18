@@ -48,6 +48,8 @@ INCLUDES
 #include "FGMatrix33.h"
 #include "input_output/FGGroundCallback.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -158,7 +160,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGLocation : public FGJSBBase
+class JSBSIM_API FGLocation : public FGJSBBase
 {
 public:
   /** Default constructor. */

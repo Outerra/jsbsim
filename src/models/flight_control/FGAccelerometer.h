@@ -43,6 +43,8 @@ INCLUDES
 #include "math/FGMatrix33.h"
 #include "FGSensorOrientation.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -134,7 +136,7 @@ time.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAccelerometer  : public FGSensor, public FGSensorOrientation
+class JSBSIM_API FGAccelerometer  : public FGSensor, public FGSensorOrientation
 {
 public:
   FGAccelerometer(FGFCS* fcs, Element* element);

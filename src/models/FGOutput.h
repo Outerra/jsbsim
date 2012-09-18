@@ -44,6 +44,8 @@ INCLUDES
 #include "input_output/FGOutputType.h"
 #include "input_output/FGXMLFileRead.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -129,7 +131,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGOutput : public FGModel, public FGXMLFileRead
+class JSBSIM_API FGOutput : public FGModel, public FGXMLFileRead
 {
 public:
   FGOutput(FGFDMExec*);

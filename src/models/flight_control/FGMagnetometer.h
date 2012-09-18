@@ -46,6 +46,8 @@ INCLUDES
 #include "math/FGMatrix33.h"
 #include "FGSensorOrientation.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -125,7 +127,7 @@ time.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGMagnetometer  : public FGSensor, public FGSensorOrientation
+class JSBSIM_API FGMagnetometer  : public FGSensor, public FGSensorOrientation
 {
 public:
   FGMagnetometer(FGFCS* fcs, Element* element);

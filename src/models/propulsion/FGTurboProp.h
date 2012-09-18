@@ -47,6 +47,8 @@ INCLUDES
 #include "input_output/FGXMLElement.h"
 #include "math/FGTable.h"
 
+#include "JSBSim_api.h"
+
 #define ID_TURBOPROP "$Id: FGTurboProp.h,v 1.16 2011/08/04 13:45:42 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,7 +94,7 @@ itt_delay [-] time constant for ITT change
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTurboProp : public FGEngine
+class JSBSIM_API FGTurboProp : public FGEngine
 {
 public:
   /** Constructor

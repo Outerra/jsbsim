@@ -23,10 +23,16 @@ install-sh
 libtool
 ltmain.sh
 missing
-src/JSBSim*
 src/.libs/
 ./dotest
 *.patch
 *.diff
 *.png
 *.catalog
+*.opensdf
+*.sdf
+*.suo
+*.vcxproj.user
+ipch/
+Release_dll/
+Debug_dll/

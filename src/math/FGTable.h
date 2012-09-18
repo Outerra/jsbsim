@@ -43,6 +43,8 @@ INCLUDES
 #include <vector>
 #include <string>
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -240,7 +242,7 @@ combustion_efficiency = Lookup_Combustion_Efficiency->GetValue(equivalence_ratio
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTable : public FGParameter
+class JSBSIM_API FGTable : public FGParameter
 {
 public:
   /// Destructor

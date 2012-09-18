@@ -186,7 +186,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec : public FGJSBBase, public FGXMLFileRead
+class JSBSIM_API FGFDMExec : public FGJSBBase, public FGXMLFileRead
 {
   struct childData {
     FGFDMExec* exec;

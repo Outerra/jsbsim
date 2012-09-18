@@ -42,6 +42,8 @@ INCLUDES
 #include "math/FGCondition.h"
 #include "math/FGPropertyValue.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -132,7 +134,7 @@ whatever value fcs/roll-ap-error-summer is.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGSwitch  : public FGFCSComponent
+class JSBSIM_API FGSwitch  : public FGFCSComponent
 {
 public:
   /** Constructor

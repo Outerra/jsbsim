@@ -51,6 +51,8 @@ INCLUDES
 #include "input_output/FGXMLElement.h"
 #include "math/FGColumnVector3.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -120,7 +122,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGEngine : public FGModelFunctions, public FGXMLFileRead
+class JSBSIM_API FGEngine : public FGModelFunctions, public FGXMLFileRead
 {
 public:
   struct Inputs {

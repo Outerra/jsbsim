@@ -44,6 +44,8 @@ INCLUDES
 #include "math/FGColumnVector3.h"
 #include "math/LagrangeMultiplier.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -190,7 +192,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGLGear : public FGForce
+class JSBSIM_API FGLGear : public FGForce
 {
 public:
   struct Inputs {
@@ -307,7 +309,8 @@ public:
 
 private:
   int GearNumber;
-  static const FGMatrix33 Tb2s, Ts2b;
+  static const FGMatrix33 Tb2s;
+  static const FGMatrix33 Ts2b;
   FGMatrix33 mTGear;
   FGColumnVector3 vLocalGear;
   FGColumnVector3 vWhlVelVec, vGroundWhlVel;     // Velocity of this wheel

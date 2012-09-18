@@ -40,6 +40,8 @@ INCLUDES
 #include "FGFCSComponent.h"
 #include <vector>
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -108,7 +110,7 @@ mechanization of a servo-actuator, there should be an output specified.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGKinemat  : public FGFCSComponent {
+class JSBSIM_API FGKinemat  : public FGFCSComponent {
 public:
   /** Constructor.
       @param fcs A reference to the current flight control system.

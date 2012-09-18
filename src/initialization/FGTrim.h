@@ -54,6 +54,8 @@ INCLUDES
 #include "FGJSBBase.h"
 #include "FGTrimAxis.h"
 
+#include "JSBSim_api.h"
+
 #include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,7 +129,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTrim : public FGJSBBase
+class JSBSIM_API FGTrim : public FGJSBBase
 {
 private:
 

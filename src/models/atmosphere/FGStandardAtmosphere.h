@@ -42,6 +42,8 @@ INCLUDES
 #include "math/FGTable.h"
 #include "models/FGAtmosphere.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -100,7 +102,7 @@ consistently and accurately calculated.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGStandardAtmosphere : public FGAtmosphere {
+class JSBSIM_API FGStandardAtmosphere : public FGAtmosphere {
 public:
   /// Constructor
   FGStandardAtmosphere(FGFDMExec*);
