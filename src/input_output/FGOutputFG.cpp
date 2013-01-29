@@ -60,6 +60,10 @@ INCLUDES
 #  include <netinet/in.h>       // htonl() ntohl()
 #endif
 
+#if !defined (min)
+#  define min(X,Y) X<Y?X:Y
+#endif
+
 static const int endianTest = 1;
 #define isLittleEndian (*((char *) &endianTest ) != 0)
 
@@ -67,7 +71,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutputFG.cpp,v 1.1 2012/09/05 21:49:19 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGOutputFG.cpp,v 1.5 2012/12/15 16:13:57 bcoconni Exp $";
 static const char *IdHdr = ID_OUTPUTFG;
 
 // (stolen from FGFS native_fdm.cxx)
@@ -117,18 +121,8 @@ static void htonf (float &x)
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGOutputFG::FGOutputFG(FGFDMExec* fdmex, Element* element, int idx) :
-  FGOutputSocket(fdmex, element, idx)
-{
-  memset(&fgSockBuf, 0x0, sizeof(fgSockBuf));
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGOutputFG::FGOutputFG(FGFDMExec* fdmex, int idx, int subSystems,
-                       std::string protocol, std::string Port, std::string name,
-                       double outRate, std::vector<FGPropertyManager *> & outputProperties) :
-  FGOutputSocket(fdmex, idx, subSystems, protocol, Port, name, outRate, outputProperties)
+FGOutputFG::FGOutputFG(FGFDMExec* fdmex) :
+  FGOutputSocket(fdmex)
 {
   memset(&fgSockBuf, 0x0, sizeof(fgSockBuf));
 }
@@ -159,7 +153,7 @@ void FGOutputFG::SocketDataFill(FGNetFDM* net)
   net->phidot     = (float)(Auxiliary->GetEulerRates(ePhi)); // roll rate (radians/sec)
   net->thetadot   = (float)(Auxiliary->GetEulerRates(eTht)); // pitch rate (radians/sec)
   net->psidot     = (float)(Auxiliary->GetEulerRates(ePsi)); // yaw rate (radians/sec)
-  net->vcas       = (float)(Auxiliary->GetVcalibratedFPS()); // VCAS, ft/sec
+  net->vcas       = (float)(Auxiliary->GetVcalibratedKTS()); // VCAS, knots
   net->climb_rate = (float)(Propagate->Gethdot());           // altitude rate, ft/sec
   net->v_north    = (float)(Propagate->GetVel(eNorth));      // north vel in NED frame, fps
   net->v_east     = (float)(Propagate->GetVel(eEast));       // east vel in NED frame, fps
@@ -179,7 +173,12 @@ void FGOutputFG::SocketDataFill(FGNetFDM* net)
   net->slip_deg    = (float)(Auxiliary->Getbeta(inDegrees));  // slip ball deflection, deg
 
   // Engine status
-  net->num_engines = Propulsion->GetNumEngines(); // Number of valid engines
+  if (Propulsion->GetNumEngines() > FGNetFDM::FG_MAX_ENGINES && FDMExec->GetSimTime() == 0.0)
+    cerr << "This vehicle has " << Propulsion->GetNumEngines() << " engines, but the current " << endl
+         << "version of FlightGear's FGNetFDM only supports " << FGNetFDM::FG_MAX_ENGINES << " engines." << endl
+         << "Only the first " << FGNetFDM::FG_MAX_ENGINES << " engines will be used." << endl;
+
+  net->num_engines = min(FGNetFDM::FG_MAX_ENGINES,Propulsion->GetNumEngines()); // Number of valid engines
 
   for (i=0; i<net->num_engines; i++) {
     if (Propulsion->GetEngine(i)->GetRunning())
@@ -215,14 +214,24 @@ void FGOutputFG::SocketDataFill(FGNetFDM* net)
   }
 
   // Consumables
-  net->num_tanks = Propulsion->GetNumTanks();   // Max number of fuel tanks
+  if (Propulsion->GetNumTanks() > FGNetFDM::FG_MAX_TANKS && FDMExec->GetSimTime() == 0.0)
+    cerr << "This vehicle has " << Propulsion->GetNumTanks() << " tanks, but the current " << endl
+         << "version of FlightGear's FGNetFDM only supports " << FGNetFDM::FG_MAX_TANKS << " tanks." << endl
+         << "Only the first " << FGNetFDM::FG_MAX_TANKS << " tanks will be used." << endl;
+
+  net->num_tanks = min(FGNetFDM::FG_MAX_TANKS, Propulsion->GetNumTanks());   // Max number of fuel tanks
 
   for (i=0; i<net->num_tanks; i++) {
     net->fuel_quantity[i] = (float)(((FGTank *)Propulsion->GetTank(i))->GetContents());
   }
 
   // Gear status
-  net->num_wheels  = GroundReactions->GetNumGearUnits();
+  if (GroundReactions->GetNumGearUnits() > FGNetFDM::FG_MAX_WHEELS && FDMExec->GetSimTime() == 0.0)
+    cerr << "This vehicle has " << GroundReactions->GetNumGearUnits() << " bogeys, but the current " << endl
+         << "version of FlightGear's FGNetFDM only supports " << FGNetFDM::FG_MAX_WHEELS << " bogeys." << endl
+         << "Only the first " << FGNetFDM::FG_MAX_WHEELS << " bogeys will be used." << endl;
+
+  net->num_wheels  = min(FGNetFDM::FG_MAX_WHEELS, GroundReactions->GetNumGearUnits());
 
   for (i=0; i<net->num_wheels; i++) {
     net->wow[i]              = GroundReactions->GetGearUnit(i)->GetWOW();

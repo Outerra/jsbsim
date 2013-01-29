@@ -56,7 +56,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.79 2012/09/05 21:49:18 bcoconni Exp $"
+#define ID_FDMEXEC "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -179,7 +179,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.79 $
+    @version $Revision$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,13 +392,14 @@ public:
   /** Retrieves the value of a property.
       @param property the name of the property
       @result the value of the specified property */
-  inline double GetPropertyValue(const string& property) {return instance->GetDouble(property);}
+  inline double GetPropertyValue(const string& property)
+  { return instance->GetNode()->GetDouble(property); }
 
   /** Sets a property value.
       @param property the property to be set
       @param value the value to set the property to */
   inline void SetPropertyValue(const string& property, double value) {
-    instance->SetDouble(property, value);
+    instance->GetNode()->SetDouble(property, value);
   }
 
   /// Returns the model name.
@@ -465,6 +466,12 @@ public:
   * - tTurn
   * - tNone  */
   void DoTrim(int mode);
+  void DoSimplexTrim(int mode);
+
+  /** Executes linearization with state-space output
+   * You must trim first to get an accurate state-space model
+   */
+  void DoLinearization(int mode);
 
   /// Disables data logging to all outputs.
   void DisableOutput(void) { Output->Disable(); }
@@ -489,7 +496,7 @@ public:
     /// Name of the property.
     string base_string;
     /// The node for the property.
-    FGPropertyManager *node;
+    FGPropertyNode_ptr node;
   };
 
   /** Builds a catalog of properties.
@@ -525,10 +532,17 @@ public:
   double GetDeltaT(void) const {return dT;}
 
   /// Suspends the simulation and sets the delta T to zero.
-  void SuspendIntegration(void) {saved_dT = dT; dT = 0.0;}
+  void SuspendIntegration(void) {
+	  if (dT != 0.0) { // check if already suspended
+		  saved_dT = dT;
+		  dT = 0.0;
+	  }
+  }
 
   /// Resumes the simulation by resetting delta T to the correct value.
-  void ResumeIntegration(void)  {dT = saved_dT;}
+  void ResumeIntegration(void)  {
+	  dT = saved_dT;
+  }
 
   /** Returns the simulation suspension state.
       @return true if suspended, false if executing  */

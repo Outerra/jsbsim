@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PID "$Id: FGPID.h,v 1.13 2012/05/10 12:10:48 jberndt Exp $"
+#define ID_PID "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -118,7 +118,7 @@ For example,
 </pre>
 
     @author Jon S. Berndt
-    @version $Revision: 1.13 $
+    @version $Revision$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -149,11 +149,11 @@ private:
 
   eIntegrateType IntType;
 
-  FGPropertyManager *Trigger;
-  FGPropertyManager* KpPropertyNode;
-  FGPropertyManager* KiPropertyNode;
-  FGPropertyManager* KdPropertyNode;
-  FGPropertyManager* ProcessVariableDot;
+  FGPropertyNode_ptr Trigger;
+  FGPropertyNode_ptr KpPropertyNode;
+  FGPropertyNode_ptr KiPropertyNode;
+  FGPropertyNode_ptr KdPropertyNode;
+  FGPropertyNode_ptr ProcessVariableDot;
 
   void Debug(int from);
 };

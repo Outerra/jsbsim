@@ -63,35 +63,45 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutputTextFile.cpp,v 1.1 2012/09/05 21:49:19 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGOutputTextFile.cpp,v 1.5 2013/01/12 19:26:59 jberndt Exp $";
 static const char *IdHdr = ID_OUTPUTTEXTFILE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGOutputTextFile::FGOutputTextFile(FGFDMExec* fdmex, Element* element,
-                                   const string& _delim, int idx) :
-  FGOutputFile(fdmex, element, idx),
-  delimeter(_delim)
+bool FGOutputTextFile::Load(Element* el)
 {
+  if(!FGOutputFile::Load(el))
+    return false;
+
+  string type = el->GetAttributeValue("type");
+  string delim;
+  if (type == "TABULAR") {
+    delim = "\t";
+  } else {
+    delim = ",";
+  }
+
+  SetDelimiter(delim);
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGOutputTextFile::FGOutputTextFile(FGFDMExec* fdmex, const string& _delim,
-                                   int idx, int subSystems, std::string name,
-                                   double outRate, std::vector<FGPropertyManager *> & outputProperties) :
-  FGOutputFile(fdmex, idx, subSystems, name, outRate, outputProperties),
-  delimeter(_delim)
+bool FGOutputTextFile::OpenFile(void)
 {
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGOutputTextFile::OpenFile(void)
-{
+  datafile.clear();
   datafile.open(Filename.c_str());
+  if (!datafile) {
+    cerr << endl << fgred << highint << "ERROR: unable to open the file "
+         << reset << Filename.c_str() << endl
+         << fgred << highint << "       => Output to this file is disabled."
+         << reset << endl << endl;
+    Disable();
+    return false;
+  }
 
   string scratch = "";
   streambuf* buffer = datafile.rdbuf();
@@ -128,6 +138,9 @@ void FGOutputTextFile::OpenFile(void)
     outstream << "V_{Total} (ft/s)" + delimeter;
     outstream << "V_{Inertial} (ft/s)" + delimeter;
     outstream << "UBody" + delimeter + "VBody" + delimeter + "WBody" + delimeter;
+    outstream << "UdotBody" + delimeter + "VdotBody" + delimeter + "WdotBody" + delimeter;
+    outstream << "UdotBody_i" + delimeter + "VdotBody_i" + delimeter + "WdotBody_i" + delimeter;
+    outstream << "BodyAccel_X" + delimeter + "BodyAccel_Y" + delimeter + "BodyAccel_Z" + delimeter;
     outstream << "Aero V_{X Body} (ft/s)" + delimeter + "Aero V_{Y Body} (ft/s)" + delimeter + "Aero V_{Z Body} (ft/s)" + delimeter;
     outstream << "V_{X_{inertial}} (ft/s)" + delimeter + "V_{Y_{inertial}} (ft/s)" + delimeter + "V_{Z_{inertial}} (ft/s)" + delimeter;
     outstream << "V_{X_{ecef}} (ft/s)" + delimeter + "V_{Y_{ecef}} (ft/s)" + delimeter + "V_{Z_{ecef}} (ft/s)" + delimeter;
@@ -191,6 +204,7 @@ void FGOutputTextFile::OpenFile(void)
     outstream << "Alpha (deg)" + delimeter;
     outstream << "Beta (deg)" + delimeter;
     outstream << "Latitude (deg)" + delimeter;
+    outstream << "Latitude Geodetic (deg)" + delimeter;
     outstream << "Longitude (deg)" + delimeter;
     outstream << "X_{ECI} (ft)" + delimeter + "Y_{ECI} (ft)" + delimeter + "Z_{ECI} (ft)" + delimeter;
     outstream << "X_{ECEF} (ft)" + delimeter + "Y_{ECEF} (ft)" + delimeter + "Z_{ECEF} (ft)" + delimeter;
@@ -216,12 +230,18 @@ void FGOutputTextFile::OpenFile(void)
   }
   if (OutputProperties.size() > 0) {
     for (unsigned int i=0;i<OutputProperties.size();i++) {
-      outstream << delimeter << OutputProperties[i]->GetPrintableName();
+      if (OutputCaptions[i].size() > 0) {
+        outstream << delimeter << OutputCaptions[i];
+      } else {
+        outstream << delimeter << OutputProperties[i]->GetFullyQualifiedName();
+      }
     }
   }
 
   outstream << endl;
   outstream.flush();
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -269,6 +289,9 @@ void FGOutputTextFile::Print(void)
     outstream << setprecision(12) << Auxiliary->GetVt() << delimeter;
     outstream << Propagate->GetInertialVelocityMagnitude() << delimeter;
     outstream << setprecision(12) << Propagate->GetUVW().Dump(delimeter) << delimeter;
+    outstream << setprecision(12) << Accelerations->GetUVWdot().Dump(delimeter) << delimeter;
+    outstream << setprecision(12) << Accelerations->GetUVWidot().Dump(delimeter) << delimeter;
+    outstream << setprecision(12) << Accelerations->GetBodyAccel().Dump(delimeter) << delimeter;
     outstream << Auxiliary->GetAeroUVW().Dump(delimeter) << delimeter;
     outstream << Propagate->GetInertialVelocity().Dump(delimeter) << delimeter;
     outstream << Propagate->GetECEFVelocity().Dump(delimeter) << delimeter;
@@ -327,6 +350,7 @@ void FGOutputTextFile::Print(void)
     outstream << Auxiliary->Getalpha(inDegrees) << delimeter;
     outstream << Auxiliary->Getbeta(inDegrees) << delimeter;
     outstream << Propagate->GetLocation().GetLatitudeDeg() << delimeter;
+    outstream << Propagate->GetLocation().GetGeodLatitudeDeg() << delimeter;
     outstream << Propagate->GetLocation().GetLongitudeDeg() << delimeter;
     outstream.precision(18);
     outstream << ((FGColumnVector3)Propagate->GetInertialPosition()).Dump(delimeter) << delimeter;

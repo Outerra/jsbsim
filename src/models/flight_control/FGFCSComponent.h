@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCSCOMPONENT "$Id: FGFCSComponent.h,v 1.20 2011/06/16 03:39:38 jberndt Exp $"
+#define ID_FCSCOMPONENT "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -57,7 +57,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class FGFCS;
-class FGPropertyManager;
 class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,7 +82,7 @@ CLASS DOCUMENTATION
     - FGActuator
 
     @author Jon S. Berndt
-    @version $Id: FGFCSComponent.h,v 1.20 2011/06/16 03:39:38 jberndt Exp $
+    @version $Id$
     @see Documentation for the FGFCS class, and for the configuration file class
 */
 
@@ -109,10 +108,10 @@ public:
 protected:
   FGFCS* fcs;
   FGPropertyManager* PropertyManager;
-  FGPropertyManager* treenode;
-  std::vector <FGPropertyManager*> OutputNodes;
-  FGPropertyManager* ClipMinPropertyNode;
-  FGPropertyManager* ClipMaxPropertyNode;
+  FGPropertyNode_ptr treenode;
+  std::vector <FGPropertyNode_ptr> OutputNodes;
+  FGPropertyNode_ptr ClipMinPropertyNode;
+  FGPropertyNode_ptr ClipMaxPropertyNode;
   std::vector <FGPropertyValue*> InputNodes;
   std::vector <std::string> InputNames;
   std::vector <float> InputSigns;

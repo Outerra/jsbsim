@@ -50,7 +50,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ROTOR "$Id: FGRotor.h,v 1.14 2012/03/18 15:48:36 jentron Exp $"
+#define ID_ROTOR "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -232,7 +232,7 @@ CLASS DOCUMENTATION
     </dl>
 
     @author Thomas Kreitler
-    @version $Id: FGRotor.h,v 1.14 2012/03/18 15:48:36 jentron Exp $
+    @version $Id$
   */
 
 
@@ -371,7 +371,7 @@ private:
   double MaximalRPM;
   int    ExternalRPM;
   int    RPMdefinition;
-  FGPropertyManager* ExtRPMsource;
+  FGPropertyNode_ptr ExtRPMsource;
   double SourceGearRatio;
 
   // 'real' rotor parameters

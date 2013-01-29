@@ -48,9 +48,6 @@ COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
 
 namespace JSBSim {
 
-bool FGPropertyManager::suppress_warning = true;
-std::vector<SGPropertyNode_ptr> FGPropertyManager::tied_properties;
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPropertyManager::Unbind(void)
@@ -82,45 +79,47 @@ string FGPropertyManager::mkPropertyName(string name, bool lowercase) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGPropertyManager*
-FGPropertyManager::GetNode (const string &path, bool create)
+FGPropertyNode*
+FGPropertyNode::GetNode (const string &path, bool create)
 {
-  SGPropertyNode* node=this->getNode(path.c_str(), create);
-  if (node == 0 && !suppress_warning) {
+  SGPropertyNode* node = getNode(path.c_str(), create);
+  if (node == 0) {
     cerr << "FGPropertyManager::GetNode() No node found for " << path << endl;
   }
-  return (FGPropertyManager*)node;
+  return (FGPropertyNode*)node;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGPropertyManager*
-FGPropertyManager::GetNode (const string &relpath, int index, bool create)
+FGPropertyNode*
+FGPropertyNode::GetNode (const string &relpath, int index, bool create)
 {
-    return (FGPropertyManager*)getNode(relpath.c_str(),index,create);
+  SGPropertyNode* node = getNode(relpath.c_str(), index, create);
+  if (node == 0) {
+    cerr << "FGPropertyManager::GetNode() No node found for " << relpath
+         << "[" << index << "]" << endl;
+  }
+  return (FGPropertyNode*)node;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::HasNode (const string &path)
+bool FGPropertyNode::HasNode (const string &path)
 {
-  // Checking if a node exists shouldn't write a warning if it doesn't exist
-  suppress_warning = true;
-  bool has_node = (GetNode(path, false) != 0);
-  suppress_warning = false;
-  return has_node;
+  const SGPropertyNode* node = getNode(path.c_str(), false);
+  return (node != 0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropertyManager::GetName( void )
+string FGPropertyNode::GetName( void ) const
 {
   return string( getName() );
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropertyManager::GetPrintableName( void )
+string FGPropertyNode::GetPrintableName( void ) const
 {
   string temp_string(getName());
   size_t initial_location=0;
@@ -141,10 +140,11 @@ string FGPropertyManager::GetPrintableName( void )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropertyManager::GetFullyQualifiedName(void) {
+string FGPropertyNode::GetFullyQualifiedName(void) const
+{
     vector<string> stack;
     stack.push_back( getDisplayName(true) );
-    SGPropertyNode* tmpn=getParent();
+    const SGPropertyNode* tmpn=getParent();
     bool atroot=false;
     while( !atroot ) {
      stack.push_back( tmpn->getDisplayName(true) );
@@ -166,7 +166,7 @@ string FGPropertyManager::GetFullyQualifiedName(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropertyManager::GetRelativeName( const string &path )
+string FGPropertyNode::GetRelativeName( const string &path ) const
 {
   string temp_string = GetFullyQualifiedName();
   size_t len = path.length();
@@ -180,91 +180,91 @@ string FGPropertyManager::GetRelativeName( const string &path )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::GetBool (const string &name, bool defaultValue)
+bool FGPropertyNode::GetBool (const string &name, bool defaultValue) const
 {
   return getBoolValue(name.c_str(), defaultValue);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int FGPropertyManager::GetInt (const string &name, int defaultValue )
+int FGPropertyNode::GetInt (const string &name, int defaultValue ) const
 {
   return getIntValue(name.c_str(), defaultValue);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int FGPropertyManager::GetLong (const string &name, long defaultValue )
+int FGPropertyNode::GetLong (const string &name, long defaultValue ) const
 {
   return getLongValue(name.c_str(), defaultValue);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropertyManager::GetFloat (const string &name, float defaultValue )
+float FGPropertyNode::GetFloat (const string &name, float defaultValue ) const
 {
   return getFloatValue(name.c_str(), defaultValue);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGPropertyManager::GetDouble (const string &name, double defaultValue )
+double FGPropertyNode::GetDouble (const string &name, double defaultValue ) const
 {
   return getDoubleValue(name.c_str(), defaultValue);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropertyManager::GetString (const string &name, string defaultValue )
+string FGPropertyNode::GetString (const string &name, string defaultValue ) const
 {
   return string(getStringValue(name.c_str(), defaultValue.c_str()));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetBool (const string &name, bool val)
+bool FGPropertyNode::SetBool (const string &name, bool val)
 {
   return setBoolValue(name.c_str(), val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetInt (const string &name, int val)
+bool FGPropertyNode::SetInt (const string &name, int val)
 {
   return setIntValue(name.c_str(), val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetLong (const string &name, long val)
+bool FGPropertyNode::SetLong (const string &name, long val)
 {
   return setLongValue(name.c_str(), val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetFloat (const string &name, float val)
+bool FGPropertyNode::SetFloat (const string &name, float val)
 {
   return setFloatValue(name.c_str(), val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetDouble (const string &name, double val)
+bool FGPropertyNode::SetDouble (const string &name, double val)
 {
   return setDoubleValue(name.c_str(), val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropertyManager::SetString (const string &name, const string &val)
+bool FGPropertyNode::SetString (const string &name, const string &val)
 {
   return setStringValue(name.c_str(), val.c_str());
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::SetArchivable (const string &name, bool state )
+void FGPropertyNode::SetArchivable (const string &name, bool state )
 {
   SGPropertyNode * node = getNode(name.c_str());
   if (node == 0)
@@ -277,7 +277,7 @@ void FGPropertyManager::SetArchivable (const string &name, bool state )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::SetReadable (const string &name, bool state )
+void FGPropertyNode::SetReadable (const string &name, bool state )
 {
   SGPropertyNode * node = getNode(name.c_str());
   if (node == 0)
@@ -290,7 +290,7 @@ void FGPropertyManager::SetReadable (const string &name, bool state )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::SetWritable (const string &name, bool state )
+void FGPropertyNode::SetWritable (const string &name, bool state )
 {
   SGPropertyNode * node = getNode(name.c_str());
   if (node == 0)
@@ -305,15 +305,31 @@ void FGPropertyManager::SetWritable (const string &name, bool state )
 
 void FGPropertyManager::Untie (const string &name)
 {
-  if (!untie(name.c_str()))
-    cerr << "Failed to untie property " << name << endl;
+  SGPropertyNode* property = root->getNode(name.c_str());
+  if (!property) {
+    cerr << "Attempt to untie a non-existant property." << name << endl;
+    return;
+  }
+
+  vector <SGPropertyNode_ptr>::iterator it;
+  for (it = tied_properties.begin(); it != tied_properties.end(); ++it) {
+    if (*it == property) {
+      property->untie();
+      tied_properties.erase(it);
+      if (FGJSBBase::debug_lvl & 0x20) cout << "Untied " << name << endl;
+      return;
+    }
+  }
+
+  cerr << "Failed to untie property " << name << endl
+       << "JSBSim is not the owner of this property." << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
 {
-  SGPropertyNode* property = getNode(name.c_str(), true);
+  SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
     cerr << "Could not get or create property " << name << endl;
     return;
@@ -323,7 +339,7 @@ void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
-    if (debug_lvl & 0x20) cout << name << endl;
+    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
   }
 }
 
@@ -332,7 +348,7 @@ void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
 void FGPropertyManager::Tie (const string &name, int *pointer,
                                           bool useDefault )
 {
-  SGPropertyNode* property = getNode(name.c_str(), true);
+  SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
     cerr << "Could not get or create property " << name << endl;
     return;
@@ -342,7 +358,7 @@ void FGPropertyManager::Tie (const string &name, int *pointer,
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
-    if (debug_lvl & 0x20) cout << name << endl;
+    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
   }
 }
 
@@ -351,7 +367,7 @@ void FGPropertyManager::Tie (const string &name, int *pointer,
 void FGPropertyManager::Tie (const string &name, long *pointer,
                                           bool useDefault )
 {
-  SGPropertyNode* property = getNode(name.c_str(), true);
+  SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
     cerr << "Could not get or create property " << name << endl;
     return;
@@ -361,7 +377,7 @@ void FGPropertyManager::Tie (const string &name, long *pointer,
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
-    if (debug_lvl & 0x20) cout << name << endl;
+    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
   }
 }
 
@@ -370,7 +386,7 @@ void FGPropertyManager::Tie (const string &name, long *pointer,
 void FGPropertyManager::Tie (const string &name, float *pointer,
                                           bool useDefault )
 {
-  SGPropertyNode* property = getNode(name.c_str(), true);
+  SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
     cerr << "Could not get or create property " << name << endl;
     return;
@@ -380,7 +396,7 @@ void FGPropertyManager::Tie (const string &name, float *pointer,
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
-    if (debug_lvl & 0x20) cout << name << endl;
+    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
   }
 }
 
@@ -388,7 +404,7 @@ void FGPropertyManager::Tie (const string &name, float *pointer,
 
 void FGPropertyManager::Tie (const string &name, double *pointer, bool useDefault)
 {
-  SGPropertyNode* property = getNode(name.c_str(), true);
+  SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
     cerr << "Could not get or create property " << name << endl;
     return;
@@ -398,7 +414,7 @@ void FGPropertyManager::Tie (const string &name, double *pointer, bool useDefaul
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
-    if (debug_lvl & 0x20) cout << name << endl;
+    if (FGJSBBase::debug_lvl & 0x20) cout << name << endl;
   }
 }
 

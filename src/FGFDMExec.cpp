@@ -64,6 +64,8 @@ INCLUDES
 #include "models/FGInput.h"
 #include "models/FGOutput.h"
 #include "initialization/FGInitialCondition.h"
+#include "initialization/FGSimplexTrim.h"
+#include "initialization/FGLinearization.h"
 #include "input_output/FGPropertyManager.h"
 #include "input_output/FGScript.h"
 
@@ -71,7 +73,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.141 2012/09/15 17:00:56 bcoconni Exp $";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,7 +134,8 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
   // Prepare FDMctr for the next child FDM id
   (*FDMctr)++;       // instance. "child" instances are loaded last.
 
-  instance = Root->GetNode("/fdm/jsbsim",IdFDM,true);
+  FGPropertyNode* instanceRoot = Root->GetNode("/fdm/jsbsim",IdFDM,true);
+  instance = new FGPropertyManager(instanceRoot);
   Debug(0);
   // this is to catch errors in binding member functions to the property tree.
   try {
@@ -151,13 +154,66 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 //  typedef unsigned int (FGFDMExec::*uiPMF)(void) const;
 //  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis, false);
   instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim, false);
+  instance->Tie("simulation/do_simplex_trim", this, (iPMF)0, &FGFDMExec::DoSimplexTrim);
+  instance->Tie("simulation/do_linearization", this, (iPMF)0, &FGFDMExec::DoLinearization);
   instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions, false);
   instance->Tie("simulation/randomseed", this, (iPMF)0, &FGFDMExec::SRand, false);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   instance->Tie("simulation/sim-time-sec", this, &FGFDMExec::GetSimTime);
   instance->Tie("simulation/jsbsim-debug", this, &FGFDMExec::GetDebugLevel, &FGFDMExec::SetDebugLevel);
   instance->Tie("simulation/frame", (int *)&Frame, false);
-  instance->Tie("simulation/log_rate_hz", this, (dPMF)0, &FGFDMExec::SetLoggingRate, false);
+
+  // simplex trim properties
+  instanceRoot->SetDouble("trim/solver/rtol",0.0001);
+  instanceRoot->SetDouble("trim/solver/speed",2);
+  instanceRoot->SetDouble("trim/solver/abstol",0.001);
+  instanceRoot->SetDouble("trim/solver/iterMax",2000);
+  instanceRoot->SetInt("trim/solver/debugLevel",0);
+  instanceRoot->SetDouble("trim/solver/random",0);
+  instanceRoot->SetBool("trim/solver/showSimplex",false);
+//  instanceRoot->SetBool("trim/solver/showConvergence",true);
+  instanceRoot->SetBool("trim/solver/pause",false);
+
+  instanceRoot->SetDouble("trim/solver/throttleGuess",0.50);
+  instanceRoot->SetDouble("trim/solver/throttleMin",0.0);
+  instanceRoot->SetDouble("trim/solver/throttleMax",1.0);
+//  instanceRoot->SetDouble("trim/solver/throttleInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/throttleStep",0.1);
+
+  instanceRoot->SetDouble("trim/solver/aileronGuess",0);
+  instanceRoot->SetDouble("trim/solver/aileronMin",-1.00);
+  instanceRoot->SetDouble("trim/solver/aileronMax",1.00);
+//  instanceRoot->SetDouble("trim/solver/aileronInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/aileronStep",0.1);
+
+  instanceRoot->SetDouble("trim/solver/rudderGuess",0);
+  instanceRoot->SetDouble("trim/solver/rudderMin",-1.00);
+  instanceRoot->SetDouble("trim/solver/rudderMax",1.00);
+//  instanceRoot->SetDouble("trim/solver/rudderInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/rudderStep",0.1);
+
+  instanceRoot->SetDouble("trim/solver/elevatorGuess",-0.1);
+  instanceRoot->SetDouble("trim/solver/elevatorMin",-1.0);
+  instanceRoot->SetDouble("trim/solver/elevatorMax",1.0);
+//  instanceRoot->SetDouble("trim/solver/elevatorInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/elevatorStep",0.1);
+
+  instanceRoot->SetDouble("trim/solver/alphaGuess",0.05);
+  instanceRoot->SetDouble("trim/solver/alphaMin",-0.1);
+  instanceRoot->SetDouble("trim/solver/alphaMax",.18);
+//  instanceRoot->SetDouble("trim/solver/alphaInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/alphaStep",0.05);
+
+  instanceRoot->SetDouble("trim/solver/betaGuess",0);
+  instanceRoot->SetDouble("trim/solver/betaMin",0.0);
+  instanceRoot->SetDouble("trim/solver/betaMax",0.0);
+//  instanceRoot->SetDouble("trim/solver/betaInitialStepSize",0.1);
+  instanceRoot->SetDouble("trim/solver/betaStep",0.0);
+
+  instanceRoot->SetBool("trim/solver/showConvergeStatus",true);
+//  instanceRoot->SetBool("trim/solver/pause",true);
+  instanceRoot->SetBool("trim/solver/variablePropPitch",false);
+//  instanceRoot->SetBool("trim/solver/debugLevel",0);
 
   Constructing = false;
 }
@@ -169,6 +225,8 @@ FGFDMExec::~FGFDMExec()
   try {
     Unbind();
     DeAllocate();
+
+    delete instance;
 
     if (IdFDM == 0) { // Meaning this is no child FDM
       if(Root != 0) {
@@ -810,14 +868,14 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     element = document->FindElement("output");
     while (element) {
       string output_file_name = aircraftCfgFileName;
-      Element* document = element;
 
       if (!element->GetAttributeValue("file").empty()) {
         output_file_name = RootDir + element->GetAttributeValue("file");
-        document = LoadXMLDocument(output_file_name);
+        result = ((FGOutput*)Models[eOutput])->SetDirectivesFile(output_file_name);
       }
+      else
+        result = ((FGOutput*)Models[eOutput])->Load(element);
 
-      result = ((FGOutput*)Models[eOutput])->Load(document);
       if (!result) {
         cerr << endl << "Aircraft output element has problems in file " << output_file_name << endl;
         return result;
@@ -869,7 +927,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
   if (result) {
     struct PropertyCatalogStructure masterPCS;
     masterPCS.base_string = "";
-    masterPCS.node = (FGPropertyManager*)Root;
+    masterPCS.node = Root->GetNode();
     BuildPropertyCatalog(&masterPCS);
   }
 
@@ -897,12 +955,12 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
       pcsNew->base_string = CreateIndexedPropertyName(pcsNew->base_string, node_idx);
     }
     if (pcs->node->getChild(i)->nChildren() == 0) {
-      if (pcsNew->base_string.substr(0,11) == string("/fdm/jsbsim")) {
-        pcsNew->base_string = pcsNew->base_string.erase(0,11);
+      if (pcsNew->base_string.substr(0,12) == string("/fdm/jsbsim/")) {
+        pcsNew->base_string = pcsNew->base_string.erase(0,12);
       }
       PropertyCatalog.push_back(pcsNew->base_string);
     } else {
-      pcsNew->node = (FGPropertyManager*)pcs->node->getChild(i);
+      pcsNew->node = (FGPropertyNode*)pcs->node->getChild(i);
       BuildPropertyCatalog(pcsNew);
     }
   }
@@ -1124,6 +1182,35 @@ void FGFDMExec::DoTrim(int mode)
   if ( !trim.DoTrim() ) cerr << endl << "Trim Failed" << endl << endl;
   trim.Report();
   sim_time = saved_time;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::DoSimplexTrim(int mode)
+{
+  double saved_time;
+  if (Constructing) return;
+  if (mode < 0 || mode > JSBSim::tNone) {
+      cerr << endl << "Illegal trimming mode!" << endl << endl;
+      return;
+  }
+  saved_time = sim_time;
+  FGSimplexTrim trim(this, (JSBSim::TrimMode)mode);
+  sim_time = saved_time;
+  Setsim_time(saved_time);
+  std::cout << "dT: " << dT << std::endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::DoLinearization(int mode)
+{
+  double saved_time;
+  if (Constructing) return;
+  saved_time = sim_time;
+  FGLinearization lin(this,mode);
+  sim_time = saved_time;
+  Setsim_time(saved_time);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

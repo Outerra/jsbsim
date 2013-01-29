@@ -38,12 +38,13 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <vector>
+#include <string>
 #include "FGModel.h"
 #include "math/FGColumnVector3.h"
 #include "math/FGMatrix33.h"
 #include "input_output/FGXMLElement.h"
-#include <vector>
-#include <string>
+#include "input_output/FGXMLFileRead.h"
 
 #include "JSBSim_api.h"
 
@@ -51,7 +52,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.27 2011/11/09 21:58:26 bcoconni Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.28 2012/12/12 06:19:57 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -109,7 +110,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class JSBSIM_API FGMassBalance : public FGModel
+class JSBSIM_API FGMassBalance : public FGModel, public FGXMLFileRead
 {
 
 public:

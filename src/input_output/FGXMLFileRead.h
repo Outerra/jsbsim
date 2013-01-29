@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_XMLFILEREAD "$Id: FGXMLFileRead.h,v 1.5 2009/11/28 20:12:47 andgi Exp $"
+#define ID_XMLFILEREAD "$Id: FGXMLFileRead.h,v 1.7 2012/12/12 06:19:57 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -60,7 +60,12 @@ public:
 
 protected:
   Element* document;
-  Element* LoadXMLDocument(std::string XML_filename)
+  Element* LoadXMLDocument(std::string XML_filename, bool verbose=true)
+  {
+    return LoadXMLDocument(XML_filename, file_parser, true);
+  }
+  
+  Element* LoadXMLDocument(std::string XML_filename, FGXMLParse& fparse, bool verbose=true)
   {
     std::ifstream infile;
 
@@ -68,7 +73,7 @@ protected:
       if (XML_filename.find(".xml") == std::string::npos) XML_filename += ".xml";
       infile.open(XML_filename.c_str());
       if ( !infile.is_open()) {
-        std::cerr << "Could not open file: " << XML_filename << std::endl;
+        if (verbose) std::cerr << "Could not open file: " << XML_filename << std::endl;
         return 0L;
       }
     } else {
@@ -76,8 +81,8 @@ protected:
       return 0L;
     }
 
-    readXML(infile, file_parser, XML_filename);
-    document = file_parser.GetDocument();
+    readXML(infile, fparse, XML_filename);
+    document = fparse.GetDocument();
     infile.close();
     
     return document;
