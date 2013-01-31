@@ -123,7 +123,7 @@ std::ostream &operator<<( std::ostream &out, const FGStateSpace &ss )
 
 std::ostream &operator<<( std::ostream &out, const std::vector< std::vector<double> > &vec2d )
 {
-    int width = out.width();
+    const std::streamsize width = out.width();
     int nI = vec2d.size();
     out << std::left << std::setw(1) << "[" << std::right;
     for (int i=0;i<nI;i++)
@@ -150,7 +150,7 @@ std::ostream &operator<<( std::ostream &out, const std::vector< std::vector<doub
 
 std::ostream &operator<<( std::ostream &out, const std::vector<double> &vec )
 {
-    int width = out.width();
+    const std::streamsize width = out.width();
     int nI = vec.size();
     out << std::left << std::setw(1) << "[" << std::right;
     for (int i=0;i<nI;i++)

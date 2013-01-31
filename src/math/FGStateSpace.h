@@ -31,6 +31,8 @@
 #include <fstream>
 #include <iostream>
 
+#pragma warning(disable: 4355) // 'this' : used in base member initializer list (class FGStateSpace)
+
 namespace JSBSim
 {
 

@@ -48,7 +48,7 @@ FGNelderMead::FGNelderMead(Function * f, const std::vector<double> & initialGues
 		pause(pause), rtolI(), minCostPrevResize(1), minCost(), minCostPrev(), maxCost(),
 		nextMaxCost()
 {
-	srand ( time(NULL) ); // seed random number generator
+	srand ( unsigned(time(NULL)) ); // seed random number generator
 }
 
 void FGNelderMead::update()
@@ -87,7 +87,7 @@ void FGNelderMead::update()
 		{
             m_cost[vertex] = eval(m_simplex[vertex]);   
 		}
-		catch (const std::exception & e)
+		catch (const std::exception &)
 		{
 			m_status = -1;
 			throw;
@@ -242,7 +242,7 @@ void FGNelderMead::update()
 		}
 	}
 
-	catch (const std::exception & e)
+	catch (const std::exception &)
 	{
 		throw;
 		m_status = -1;
@@ -378,6 +378,7 @@ double FGNelderMead::eval(const std::vector<double> & vertex, bool check)
     } else {
         return m_f->eval(vertex);
     }
+    return 0.0; // to remove MSVC compiler warning
 }
 
 } // JSBSim

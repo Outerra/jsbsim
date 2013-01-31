@@ -81,7 +81,7 @@ public:
   { return SGReferenced::count(_ptr); }
 
   bool valid(void) const
-  { return _ptr; }
+  { return _ptr != 0; }
 
 private:
   void assign(T* p)

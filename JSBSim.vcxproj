@@ -153,13 +153,13 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">Debug_dll\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">$(SolutionDir)..\bin\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Debug\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">Debug\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">Debug\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">Debug_dll\out\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Win32'">$(SolutionDir)..\out\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Debug\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_dll|x64'">Debug\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">Debug\</IntDir>
@@ -171,13 +171,13 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Itanium'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_dll|Itanium'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Release_dll\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">$(SolutionDir)..\bin\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Release\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Release\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Release\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Itanium'">Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">Release_dll\out\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|Win32'">$(SolutionDir)..\out\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_dll|x64'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Itanium'">Release\</IntDir>
@@ -270,6 +270,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(SolutionDir)..\lib\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -457,7 +458,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <DisableSpecificWarnings>4251;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4267;4251;</DisableSpecificWarnings>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <OmitFramePointers>true</OmitFramePointers>
       <StructMemberAlignment>Default</StructMemberAlignment>
@@ -476,6 +477,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(SolutionDir)..\lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <Manifest>
       <SuppressStartupBanner>false</SuppressStartupBanner>
