@@ -54,7 +54,7 @@ using std::cerr;
 using std::endl;
 
 // Set up the default ground callback object.
-FGGroundCallback_ptr FGLocation::GroundCallback = NULL;
+FGGroundCallback* FGLocation::GroundCallback = NULL;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

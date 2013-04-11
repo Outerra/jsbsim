@@ -40,6 +40,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFDMExec.h"
+#include "input_output/FGGroundCallback.h"
 #include "input_output/FGXMLFileRead.h"
 
 #if !defined(__GNUC__) && !defined(sgi) && !defined(_MSC_VER)
@@ -323,7 +324,7 @@ int real_main(int argc, char* argv[])
   }
 
   // *** SET UP JSBSIM *** //
-  FDMExec = new JSBSim::FGFDMExec();
+  FDMExec = new JSBSim::FGFDMExec(new JSBSim::FGDefaultGroundCallback());
   FDMExec->SetRootDir(RootDir);
   FDMExec->SetAircraftPath("aircraft");
   FDMExec->SetEnginePath("engine");

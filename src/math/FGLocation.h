@@ -664,7 +664,7 @@ private:
   mutable bool mCacheValid;
 
   /** The ground callback object pointer */
-  static FGGroundCallback_ptr GroundCallback;
+  static FGGroundCallback *GroundCallback;
 };
 
 /** Scalar multiplication.

@@ -253,8 +253,8 @@ void readXML (istream &input, XMLVisitor &visitor, const string &path)
 
     input.read(buf,16384);
     if (!XML_Parse(parser, buf, int(input.gcount()), false)) {
-      XML_ParserFree(parser);
       cerr << "XML parse error: " << XML_ErrorString(XML_GetErrorCode(parser)) << endl;
+      XML_ParserFree(parser);
       abort();
     }
 

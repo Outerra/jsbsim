@@ -217,7 +217,10 @@ class JSBSIM_API FGFDMExec : public FGJSBBase, public FGXMLFileRead
 public:
 
   /// Default constructor
-  FGFDMExec(FGPropertyManager* root = 0, unsigned int* fdmctr = 0);
+  FGFDMExec(
+      FGGroundCallback *gc,
+      FGPropertyManager* root = 0,
+      unsigned int* fdmctr = 0);
 
   /// Default destructor
   ~FGFDMExec();
