@@ -28,8 +28,19 @@ set(JSBSIM_MATH_HDR FGColumnVector3.h
                     FGNelderMead.h
                     FGStateSpace.h)
 
-add_library(Math ${JSBSIM_STATIC_LIBS_TYPE} ${JSBSIM_MATH_SRC})
+add_library(Math ${JSBSIM_MATH_HDR} ${JSBSIM_MATH_SRC})
+set_target_properties (Math PROPERTIES
+                            VERSION ${LIBRARY_VERSION})
+if(BUILD_SHARED_LIBS)
+  set_target_properties (Math PROPERTIES
+                              SOVERSION ${LIBRARY_SOVERSION}
+                              FRAMEWORK ON)
+endif()
 
 install(TARGETS Math LIBRARY DESTINATION lib
-                     ARCHIVE DESTINATION lib)
+                     ARCHIVE DESTINATION lib
+                     RUNTIME DESTINATION lib
+                     # For Mac
+                     FRAMEWORK DESTINATION "/Library/Frameworks")
+install(FILES ${JSBSIM_MATH_HDR} DESTINATION include/JSBSim/math)
 
