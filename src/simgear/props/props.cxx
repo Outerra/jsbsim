@@ -164,12 +164,15 @@ parse_index (const string &path, int &i)
   else
     i++;
 
+  int sign = 1;
   for (int max = (int)path.size(); i < max; i++) {
     if (isdigit(path[i])) {
       index = (index * 10) + (path[i] - '0');
+    } else if (path[i] == '-') {
+        sign = -1;
     } else if (path[i] == ']') {
       i++;
-      return index;
+      return index * sign;
     } else {
       break;
     }
