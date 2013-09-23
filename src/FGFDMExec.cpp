@@ -83,11 +83,15 @@ CLASS IMPLEMENTATION
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Constructor
 
-FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
+FGFDMExec::FGFDMExec(
+    FGGroundCallback *gc,
+    FGPropertyManager* root,
+    unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
 {
   Frame           = 0;
   Error           = 0;
-  SetGroundCallback(new FGDefaultGroundCallback());
+  //SetGroundCallback(new FGDefaultGroundCallback());
+  SetGroundCallback(gc);
   IC              = 0;
   Trim            = 0;
   Script          = 0;
@@ -1084,7 +1088,7 @@ bool FGFDMExec::ReadChild(Element* el)
 
   struct childData* child = new childData;
 
-  child->exec = new FGFDMExec(Root, FDMctr);
+  child->exec = new FGFDMExec(new FGDefaultGroundCallback(), Root, FDMctr);
   child->exec->SetChild(true);
 
   string childAircraft = el->GetAttributeValue("name");

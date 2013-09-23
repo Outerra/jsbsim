@@ -164,12 +164,15 @@ parse_index (const string &path, int &i)
   else
     i++;
 
+  int sign = 1;
   for (int max = (int)path.size(); i < max; i++) {
     if (isdigit(path[i])) {
       index = (index * 10) + (path[i] - '0');
+    } else if (path[i] == '-') {
+        sign = -1;
     } else if (path[i] == ']') {
       i++;
-      return index;
+      return index * sign;
     } else {
       break;
     }
@@ -1119,7 +1122,7 @@ SGPropertyNode::getFloatValue () const
     return float(get_double());
   case STRING:
   case UNSPECIFIED:
-    return atof(get_string());
+    return float(atof(get_string()));
   case NONE:
   default:
     return SGRawValue<float>::DefaultValue;
@@ -1455,7 +1458,7 @@ SGPropertyNode::setStringValue (const char * value)
     result = set_long(strtol(value, 0, 0));
     break;
   case FLOAT:
-    result = set_float(atof(value));
+    result = set_float(float(atof(value)));
     break;
   case DOUBLE:
     result = set_double(strtod(value, 0));
@@ -1499,7 +1502,7 @@ SGPropertyNode::setUnspecifiedValue (const char * value)
     result = set_long(strtol(value, 0, 0));
     break;
   case FLOAT:
-    result = set_float(atof(value));
+    result = set_float(float(atof(value)));
     break;
   case DOUBLE:
     result = set_double(strtod(value, 0));

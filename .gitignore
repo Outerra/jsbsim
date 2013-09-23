@@ -31,3 +31,10 @@ src/.libs/
 *.diff
 *.png
 *.catalog
+*.opensdf
+*.sdf
+*.suo
+*.vcxproj.user
+ipch/
+Release_dll/
+Debug_dll/

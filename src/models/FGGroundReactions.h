@@ -46,6 +46,8 @@ INCLUDES
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGXMLFileRead.h"
 
+#include "JSBSim_api.h"
+
 #define ID_GROUNDREACTIONS "$Id: FGGroundReactions.h,v 1.25 2012/12/12 06:19:57 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -79,7 +81,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGroundReactions : public FGModel, public FGXMLFileRead
+class JSBSIM_API FGGroundReactions : public FGModel, public FGXMLFileRead
 {
 public:
   FGGroundReactions(FGFDMExec*);

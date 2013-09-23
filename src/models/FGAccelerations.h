@@ -104,7 +104,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAccelerations : public FGModel {
+class JSBSIM_API FGAccelerations : public FGModel {
 public:
   /** Constructor.
       @param Executive a pointer to the parent executive object */

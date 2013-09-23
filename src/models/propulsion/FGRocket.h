@@ -43,6 +43,8 @@ INCLUDES
 #include "math/FGFunction.h"
 #include "input_output/FGXMLElement.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -130,7 +132,7 @@ fuel begins burning and thrust is provided.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGRocket : public FGEngine
+class JSBSIM_API FGRocket : public FGEngine
 {
 public:
   /** Constructor.

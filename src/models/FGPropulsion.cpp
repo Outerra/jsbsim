@@ -123,7 +123,7 @@ bool FGPropulsion::InitModel(void)
   for (unsigned int i=0; i<numEngines; i++) {
     switch (Engines[i]->GetType()) {
       case FGEngine::etPiston:
-        ((FGPiston*)Engines[i])->ResetToIC();
+        static_cast<FGPiston*>(Engines[i])->ResetToIC();
         try {
           if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
         } catch (string str) {
@@ -132,7 +132,7 @@ bool FGPropulsion::InitModel(void)
         }
         break;
       case FGEngine::etTurbine:
-        ((FGTurbine*)Engines[i])->ResetToIC();
+        static_cast<FGTurbine*>(Engines[i])->ResetToIC();
         try {
           if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
         } catch (string str) {
@@ -663,10 +663,12 @@ void FGPropulsion::SetMagnetos(int setting)
       // ToDo: first need to make sure the engine Type is really appropriate:
       //   do a check to see if it is of type Piston. This should be done for
       //   all of this kind of possibly across-the-board settings.
-      ((FGPiston*)Engines[i])->SetMagnetos(setting);
+      if(Engines[i]->GetType() == FGEngine::etPiston)
+        static_cast<FGPiston*>(Engines[i])->SetMagnetos(setting);
     }
   } else {
-    ((FGPiston*)Engines[ActiveEngine])->SetMagnetos(setting);
+    if(Engines[ActiveEngine]->GetType() == FGEngine::etPiston)
+        static_cast<FGPiston*>(Engines[ActiveEngine])->SetMagnetos(setting);
   }
 }
 
@@ -825,6 +827,7 @@ void FGPropulsion::bind(void)
 
   PropertyManager->Tie("propulsion/active_engine", this, (iPMF)&FGPropulsion::GetActiveEngine,
                         &FGPropulsion::SetActiveEngine, true);
+  PropertyManager->Tie("propulsion/num_engines", this, (iPMF)&FGPropulsion::GetNumEngines);
   PropertyManager->Tie("propulsion/total-fuel-lbs", this, &FGPropulsion::GetTotalFuelQuantity);
   PropertyManager->Tie("propulsion/refuel", this, &FGPropulsion::GetRefuel,
                         &FGPropulsion::SetRefuel, true);

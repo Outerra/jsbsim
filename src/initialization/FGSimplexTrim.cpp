@@ -23,7 +23,7 @@ namespace JSBSim {
 
 FGSimplexTrim::FGSimplexTrim(FGFDMExec * fdm, TrimMode mode)
 {
-    std::clock_t time_start=clock(), time_trimDone, time_linDone;
+    std::clock_t time_start=clock(), time_trimDone/*, time_linDone*/;
 
     // variables
     FGTrimmer::Constraints constraints;
@@ -39,7 +39,7 @@ FGSimplexTrim::FGSimplexTrim(FGFDMExec * fdm, TrimMode mode)
     double abstol = node->GetDouble("trim/solver/abstol");
     double speed = node->GetDouble("trim/solver/speed"); // must be > 1, 2 typical
     double random = node->GetDouble("trim/solver/random");
-    int iterMax = node->GetDouble("trim/solver/iterMax");
+    int iterMax = int(node->GetDouble("trim/solver/iterMax"));
     bool showConvergence = node->GetBool("trim/solver/showConvergence");
     bool pause = node->GetBool("trim/solver/pause");
     bool showSimplex = node->GetBool("trim/solver/showSimplex");

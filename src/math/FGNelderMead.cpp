@@ -85,14 +85,14 @@ void FGNelderMead::update()
         try
         {
             m_cost[vertex] = eval(m_simplex[vertex]);   
-        }
-        catch (const std::exception & e)
-        {
-            m_status = -1;
-            throw;
-            return;
-        }
-    }
+		}
+		catch (const std::exception &)
+		{
+			m_status = -1;
+			throw;
+			return;
+		}
+	}
 
     // find max cost, next max cost, and min cost
     m_iMax = m_iNextMax = m_iMin = 0;
@@ -241,12 +241,12 @@ void FGNelderMead::update()
         }
     }
 
-    catch (const std::exception & e)
-    {
-        throw;
-        m_status = -1;
-        return;
-    }
+	catch (const std::exception &)
+	{
+		throw;
+		m_status = -1;
+		return;
+	}
 
     // iteration
     iter++;
@@ -377,6 +377,7 @@ double FGNelderMead::eval(const std::vector<double> & vertex, bool check)
     } else {
         return m_f->eval(vertex);
     }
+    return 0.0; // to remove MSVC compiler warning
 }
 
 } // JSBSim

@@ -62,6 +62,8 @@ INCLUDES
 #include "math/FGMatrix33.h"
 #include "math/FGColumnVector3.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -222,7 +224,7 @@ and vMn, the moments, can be made directly. Otherwise, the usage is similar.<br>
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGForce : public FGJSBBase
+class JSBSIM_API FGForce : public FGJSBBase
 {
 public:
   /// Constructor
