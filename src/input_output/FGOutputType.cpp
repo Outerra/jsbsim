@@ -197,7 +197,7 @@ void FGOutputType::SetRate(double rtHz)
 {
   rtHz = rtHz>1000?1000:(rtHz<0?0:rtHz);
   if (rtHz > 0) {
-    FGModel::SetRate(0.5 + 1.0/(FDMExec->GetDeltaT()*rtHz));
+    FGModel::SetRate(int(0.5 + 1.0/(FDMExec->GetDeltaT()*rtHz)));
     Enable();
   } else {
     FGModel::SetRate(1);

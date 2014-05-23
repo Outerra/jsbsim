@@ -40,6 +40,8 @@ INCLUDES
 #include "FGFCSComponent.h"
 #include "math/FGFunction.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -111,7 +113,7 @@ a function (from an aero specification):
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFCSFunction  : public FGFCSComponent
+class JSBSIM_API FGFCSFunction  : public FGFCSComponent
 {
 public:
   FGFCSFunction(FGFCS* fcs, Element* element);

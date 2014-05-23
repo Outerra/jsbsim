@@ -289,7 +289,7 @@ int FGfdmSocket::Reply(const string& text)
 
 void FGfdmSocket::Close(void)
 {
-  close(sckt_in);
+  _close(sckt_in);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

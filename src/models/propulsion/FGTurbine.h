@@ -42,6 +42,8 @@ INCLUDES
 
 #include "FGEngine.h"
 
+#include "JSBSim_api.h"
+
 #define ID_TURBINE "$Id: FGTurbine.h,v 1.22 2011/08/04 13:45:42 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,7 +159,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTurbine : public FGEngine
+class JSBSIM_API FGTurbine : public FGEngine
 {
 public:
   /** Constructor

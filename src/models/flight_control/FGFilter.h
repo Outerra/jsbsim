@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -236,7 +238,7 @@ output, such as the elevator, or speedbrake, etc.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFilter  : public FGFCSComponent
+class JSBSIM_API FGFilter  : public FGFCSComponent
 {
 public:
   FGFilter(FGFCS* fcs, Element* element);

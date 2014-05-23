@@ -49,6 +49,8 @@ INCLUDES
 
 #include "FGJSBBase.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -73,7 +75,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGPropertyNode : public SGPropertyNode
+class JSBSIM_API FGPropertyNode : public SGPropertyNode
 {
   public:
     /// Destructor
@@ -208,6 +210,7 @@ class FGPropertyNode : public SGPropertyNode
      * @return The property's value as a double, or the default value provided.
      */
     double GetDouble (const std::string &name, double defaultValue = 0.0) const;
+    double GetDouble (const char *name, double defaultValue = 0.0) const;
 
 
     /**
@@ -305,6 +308,7 @@ class FGPropertyNode : public SGPropertyNode
      * @return true if the assignment succeeded, false otherwise.
      */
     bool SetDouble (const std::string &name, double val);
+    bool SetDouble (const char *name, double val);
 
 
     /**

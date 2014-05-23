@@ -34,6 +34,8 @@ SENTRY
 #ifndef FGRUNGEKUTTA_H
 #define FGRUNGEKUTTA_H
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   INCLUDES
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -83,7 +85,7 @@ DECLARATION: FGRungeKutta
    Abstract base.
 */
 
-class FGRungeKutta {
+class JSBSIM_API FGRungeKutta {
 
   public:
 

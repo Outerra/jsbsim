@@ -41,6 +41,7 @@ INCLUDES
 
 #include "initialization/FGInitialCondition.h"
 #include "FGFDMExec.h"
+#include "input_output/FGGroundCallback.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 
@@ -290,7 +291,7 @@ int main(int argc, char* argv[])
 
 int real_main(int argc, char* argv[])
 {
-  // *** INITIALIZATIONS *** //
+  /*// *** INITIALIZATIONS *** //
 
   ScriptName = "";
   AircraftName = "";
@@ -326,7 +327,7 @@ int real_main(int argc, char* argv[])
   }
 
   // *** SET UP JSBSIM *** //
-  FDMExec = new JSBSim::FGFDMExec();
+  FDMExec = new JSBSim::FGFDMExec(new JSBSim::FGDefaultGroundCallback());
   FDMExec->SetRootDir(RootDir);
   FDMExec->SetAircraftPath("aircraft");
   FDMExec->SetEnginePath("engine");
@@ -460,10 +461,10 @@ int real_main(int argc, char* argv[])
   cout << "Start: " << s << " (HH:MM:SS)" << endl;
 
   frame_duration = FDMExec->GetDeltaT();
-  if (realtime) sleep_nseconds = (long)(frame_duration*1e9);
-  else          sleep_nseconds = (sleep_period )*1e9;           // 0.01 seconds
+  if (realtime) sleep_nseconds = long((frame_duration*1e9));
+  else          sleep_nseconds = long((sleep_period )*1e9);           // 0.01 seconds
 
-  tzset(); 
+  _tzset(); 
   current_seconds = initial_seconds = getcurrentseconds();
 
   // *** CYCLIC EXECUTION LOOP, AND MESSAGE READING *** //
@@ -529,7 +530,7 @@ quit:
   cout << "End: " << s << " (HH:MM:SS)" << endl;
 
   // CLEAN UP
-  delete FDMExec;
+  delete FDMExec; */
 
   return 0;
 }

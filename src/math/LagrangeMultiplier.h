@@ -30,6 +30,8 @@ SENTRY
 #ifndef LAGRANGEMULTIPLIER_H
 #define LAGRANGEMULTIPLIER_H
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -54,7 +56,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-struct LagrangeMultiplier {
+struct JSBSIM_API LagrangeMultiplier {
   FGColumnVector3 ForceJacobian;
   FGColumnVector3 MomentJacobian;
   double Min;

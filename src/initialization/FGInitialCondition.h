@@ -50,6 +50,8 @@ INCLUDES
 #include "math/FGLocation.h"
 #include "math/FGQuaternion.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -224,7 +226,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGInitialCondition : public FGJSBBase
+class JSBSIM_API FGInitialCondition : public FGJSBBase
 {
 public:
   /// Constructor
@@ -656,7 +658,7 @@ public:
   /** Is an engine running ?
       @param index of the engine to be checked
       @return true if the engine is running. */
-  bool IsEngineRunning(unsigned int n) const { return (enginesRunning & (1 << n)); }
+  bool IsEngineRunning(unsigned int n) const { return (enginesRunning & (1 << n)) != 0; }
 
   void bind(FGPropertyManager* pm);
 

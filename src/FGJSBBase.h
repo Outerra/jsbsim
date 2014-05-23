@@ -43,6 +43,8 @@ INCLUDES
 #include <string>
 #include <cmath>
 
+#include "JSBSim_api.h"
+
 using std::min;
 using std::max;
 
@@ -80,7 +82,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGJSBBase {
+class JSBSIM_API FGJSBBase {
 public:
   /// Constructor for FGJSBBase.
   FGJSBBase() {};

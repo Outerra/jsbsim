@@ -48,7 +48,7 @@ FGNelderMead::FGNelderMead(Function * f, const std::vector<double> & initialGues
         pause(pause), rtolI(), minCostPrevResize(1), minCost(), minCostPrev(), maxCost(),
         nextMaxCost()
 {
-    srand ( time(NULL) ); // seed random number generator
+    srand ( unsigned(time(NULL)) ); // seed random number generator
 }
 
 void FGNelderMead::update()
@@ -84,13 +84,14 @@ void FGNelderMead::update()
         try
         {
             m_cost[vertex] = eval(m_simplex[vertex]);   
-        }
-        catch (const std::exception & e)
-        {
-            m_status = -1;
-            throw;
-        }
-    }
+		}
+		catch (const std::exception &)
+		{
+			m_status = -1;
+			throw;
+			return;
+		}
+	}
 
     // find max cost, next max cost, and min cost
     m_iMax = m_iNextMax = m_iMin = 0;
@@ -238,11 +239,12 @@ void FGNelderMead::update()
         }
     }
 
-    catch (const std::exception & e)
-    {
-        m_status = -1;
-        throw;
-    }
+	catch (const std::exception &)
+	{
+		throw;
+		m_status = -1;
+		return;
+	}
 
     // iteration
     iter++;

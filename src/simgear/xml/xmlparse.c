@@ -1,7 +1,9 @@
 /* Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
    See the file COPYING for copying permission.
 */
-#define NDEBUG
+#ifndef NDEBUG
+    #define NDEBUG
+#endif
 
 #include <stddef.h>
 #include <string.h>                     /* memset(), memcpy() */

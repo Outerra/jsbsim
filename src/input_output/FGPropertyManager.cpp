@@ -215,6 +215,13 @@ double FGPropertyNode::GetDouble (const string &name, double defaultValue ) cons
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+double FGPropertyNode::GetDouble (const char* name, double defaultValue ) const
+{
+  return getDoubleValue(name, defaultValue);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 string FGPropertyNode::GetString (const string &name, string defaultValue ) const
 {
   return string(getStringValue(name.c_str(), defaultValue.c_str()));
@@ -253,6 +260,13 @@ bool FGPropertyNode::SetFloat (const string &name, float val)
 bool FGPropertyNode::SetDouble (const string &name, double val)
 {
   return setDoubleValue(name.c_str(), val);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGPropertyNode::SetDouble (const char *name, double val)
+{
+  return setDoubleValue(name, val);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

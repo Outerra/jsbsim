@@ -42,6 +42,8 @@ INCLUDES
 #include "math/FGMatrix33.h"
 #include "FGSensorOrientation.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -110,7 +112,7 @@ time.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGyro  : public FGSensor, public FGSensorOrientation
+class JSBSIM_API FGGyro  : public FGSensor, public FGSensorOrientation
 {
 public:
   FGGyro(FGFCS* fcs, Element* element);

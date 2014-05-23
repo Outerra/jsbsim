@@ -49,6 +49,8 @@ INCLUDES
 #include "FGMatrix33.h"
 #include "input_output/FGGroundCallback.h"
 
+#include "JSBSim_api.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -159,7 +161,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGLocation : public FGJSBBase
+class JSBSIM_API FGLocation : public FGJSBBase
 {
 public:
   /** Default constructor. */
@@ -663,7 +665,7 @@ private:
   mutable bool mCacheValid;
 
   /** The ground callback object pointer */
-  static FGGroundCallback_ptr GroundCallback;
+  static FGGroundCallback *GroundCallback;
 };
 
 /** Scalar multiplication.

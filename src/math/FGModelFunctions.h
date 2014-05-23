@@ -38,6 +38,8 @@ INCLUDES
 #include <map>
 #include <list>
 
+#include "JSBSim_api.h"
+
 #include "FGJSBBase.h"
 #include "input_output/FGPropertyReader.h"
 
@@ -78,7 +80,7 @@ CLASS DOCUMENTATION
 DECLARATION: FGModelFunctions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGModelFunctions : public FGPropertyReader, public FGJSBBase
+class JSBSIM_API FGModelFunctions : public FGPropertyReader, public FGJSBBase
 {
 public:
   virtual ~FGModelFunctions();

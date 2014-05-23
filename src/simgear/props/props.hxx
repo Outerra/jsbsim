@@ -47,6 +47,7 @@
   #include <simgear/structure/SGSharedPtr.hxx>
 #endif
 
+#include "JSBSim_api.h"
 
 #ifdef NONE
 #pragma warn A sloppy coder has defined NONE as a macro!
@@ -490,7 +491,7 @@ private:
 /**
  * A node in a property tree.
  */
-class SGPropertyNode : public SGReferenced
+class JSBSIM_API SGPropertyNode : public SGReferenced
 {
 public:
 

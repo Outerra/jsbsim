@@ -185,7 +185,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec : public FGJSBBase
+class JSBSIM_API FGFDMExec : public FGJSBBase
 {
   struct childData {
     FGFDMExec* exec;
@@ -216,7 +216,10 @@ class FGFDMExec : public FGJSBBase
 public:
 
   /// Default constructor
-  FGFDMExec(FGPropertyManager* root = 0, unsigned int* fdmctr = 0);
+  FGFDMExec(
+      FGGroundCallback *gc,
+      FGPropertyManager* root = 0,
+      unsigned int* fdmctr = 0);
 
   /// Default destructor
   ~FGFDMExec();

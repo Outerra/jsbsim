@@ -45,6 +45,7 @@ INCLUDES
 #include "FGLGear.h"
 #include "math/FGColumnVector3.h"
 
+#include "JSBSim_api.h"
 #define ID_GROUNDREACTIONS "$Id: FGGroundReactions.h,v 1.29 2014/01/16 12:31:49 ehofman Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +79,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGroundReactions : public FGModel, public FGSurface
+class JSBSIM_API FGGroundReactions : public FGModel, public FGSurface
 {
 public:
   FGGroundReactions(FGFDMExec*);
