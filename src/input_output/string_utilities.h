@@ -75,7 +75,7 @@ CLASS DECLARATION
   std::vector <std::string> split(std::string str, char d);
 
   // libc++ has these as built-ins for all C++ language versions
-#if !defined(_LIBCPP_VERSION)
+#if !defined(_LIBCPP_VERSION) && _MSC_VER < 1800
   extern std::string to_string(int);
   extern std::string to_string(double);
   extern std::string to_string(float);

@@ -28,6 +28,7 @@ Purpose: Stores various parameter types for functions
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <assert.h>
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
@@ -372,7 +373,13 @@ double FGFunction::GetValue(void) const
 
   if (   Type != eRandom
       && Type != eUrandom
-      && Type != ePi      ) temp = Parameters[0]->GetValue();
+      && Type != ePi      )
+  {
+      temp = Parameters[0]->GetValue();
+#if _DEBUG
+      assert( _finite(temp) );
+#endif
+  }
   
   switch (Type) {
   case eTopLevel:
@@ -769,6 +776,10 @@ double FGFunction::GetValue(void) const
     cerr << "Unknown function operation type" << endl;
     break;
   }
+
+#if _DEBUG
+  assert( _finite(temp) );
+#endif
 
   return temp;
 }

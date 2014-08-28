@@ -162,7 +162,9 @@ bool FGAuxiliary::Run(bool Holding)
   double AeroV2 = vAeroUVW(eV)*vAeroUVW(eV);
   double AeroW2 = vAeroUVW(eW)*vAeroUVW(eW);
   double mUW = AeroU2 + AeroW2;
-  double Vtdot = (vAeroUVW(eU)*in.vUVWdot(eU) + vAeroUVW(eV)*in.vUVWdot(eV) + vAeroUVW(eW)*in.vUVWdot(eW))/Vt;
+  double Vtdot = Vt>0.0
+      ? (vAeroUVW(eU)*in.vUVWdot(eU) + vAeroUVW(eV)*in.vUVWdot(eV) + vAeroUVW(eW)*in.vUVWdot(eW))/Vt
+      : 0.0;
 
   double Vt2 = Vt*Vt;
 
