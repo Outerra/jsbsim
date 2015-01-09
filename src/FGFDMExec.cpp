@@ -76,7 +76,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.161 2014/05/17 15:35:53 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.166 2015/01/02 22:43:13 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -453,6 +453,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Auxiliary->in.TurbPQR      = Winds->GetTurbPQR();
     Auxiliary->in.WindPsi      = Winds->GetWindPsi();
     Auxiliary->in.Vwind        = Winds->GetTotalWindNED().Magnitude();
+    Auxiliary->in.PitotAngle   = Aircraft->GetPitotAngle();
     break;
   case eSystems:
     // Dynamic inputs come into the components that FCS manages through properties
@@ -545,6 +546,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Aircraft->in.GroundMoment  = GroundReactions->GetMoments();
     Aircraft->in.ExternalMoment = ExternalReactions->GetMoments();
     Aircraft->in.BuoyantMoment = BuoyantForces->GetMoments();
+    Aircraft->in.DeltaXYZcg    = MassBalance->GetDeltaXYZcgBody();
     break;
   case eAccelerations:
     Accelerations->in.J        = MassBalance->GetJ();
@@ -555,7 +557,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.Tec2i    = Propagate->GetTec2i();
     Accelerations->in.qAttitudeECI = Propagate->GetQuaternionECI();
     Accelerations->in.Moment   = Aircraft->GetMoments();
-    Accelerations->in.GroundMoment  = GroundReactions->GetMoments();
+    Accelerations->in.GroundMoment  = Aircraft->GetGroundMoments();
     Accelerations->in.Force    = Aircraft->GetForces();
     Accelerations->in.GroundForce   = GroundReactions->GetForces();
     Accelerations->in.GAccel   = Inertial->GetGAccel(Propagate->GetRadius());
@@ -569,6 +571,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.MultipliersList = GroundReactions->GetMultipliersList();
     Accelerations->in.TerrainVelocity = Propagate->GetTerrainVelocity();
     Accelerations->in.TerrainAngularVel = Propagate->GetTerrainAngularVelocity();
+    Accelerations->in.DeltaXYZcg = MassBalance->GetDeltaXYZcgBody();
     break;
   default:
     break;
@@ -885,22 +888,13 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
       }
     }
 
-    // Process the output element[s]. This element is OPTIONAL, and there may be more than one.
+    // Process the output element[s]. This element is OPTIONAL, and there may be
+    // more than one.
     element = document->FindElement("output");
     while (element) {
-      string output_file_name = aircraftCfgFileName;
+      if (!static_cast<FGOutput*>(Models[eOutput])->Load(element))
+        return false;
 
-      if (!element->GetAttributeValue("file").empty()) {
-        output_file_name = RootDir + element->GetAttributeValue("file");
-        result = ((FGOutput*)Models[eOutput])->SetDirectivesFile(output_file_name);
-      }
-      else
-        result = ((FGOutput*)Models[eOutput])->Load(element);
-
-      if (!result) {
-        cerr << endl << "Aircraft output element has problems in file " << output_file_name << endl;
-        return result;
-      }
       element = document->FindNextElement("output");
     }
 
@@ -1216,7 +1210,7 @@ void FGFDMExec::DoTrim(int mode)
   FGTrim trim(this, (JSBSim::TrimMode)mode);
   if ( !trim.DoTrim() ) cerr << endl << "Trim Failed" << endl << endl;
   trim.Report();
-  sim_time = saved_time;
+  Setsim_time(saved_time);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1231,7 +1225,6 @@ void FGFDMExec::DoSimplexTrim(int mode)
   }
   saved_time = sim_time;
   FGSimplexTrim trim(this, (JSBSim::TrimMode)mode);
-  sim_time = saved_time;
   Setsim_time(saved_time);
   std::cout << "dT: " << dT << std::endl;
 }
@@ -1244,7 +1237,6 @@ void FGFDMExec::DoLinearization(int mode)
   if (Constructing) return;
   saved_time = sim_time;
   FGLinearization lin(this,mode);
-  sim_time = saved_time;
   Setsim_time(saved_time);
 }
 
@@ -1252,6 +1244,7 @@ void FGFDMExec::DoLinearization(int mode)
 
 void FGFDMExec::SRand(int sr)
 {
+  gaussian_random_number_phase = 0;
   srand(sr);
 }
 

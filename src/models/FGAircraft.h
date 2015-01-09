@@ -51,7 +51,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_AIRCRAFT "$Id: FGAircraft.h,v 1.21 2013/11/24 11:40:55 bcoconni Exp $"
+#define ID_AIRCRAFT "$Id: FGAircraft.h,v 1.23 2015/01/02 22:43:14 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -82,6 +82,7 @@ CLASS DOCUMENTATION
         <vtailarea unit="{FT2 | M}"> {number} </vtailarea>
         <vtailarm unit="{FT | M}"> {number} </vtailarm>
         <wing_incidence unit="{RAD | DEG}"> {number} </wing_incidence>
+        <pitot_angle unit="{RAD | DEG}"> {number} </pitot_angle>
         <location name="{AERORP | EYEPOINT | VRP}" unit="{IN | M}">
             <x> {number} </x>
             <y> {number} </y>
@@ -92,7 +93,7 @@ CLASS DOCUMENTATION
 @endcode
 
     @author Jon S. Berndt
-    @version $Id: FGAircraft.h,v 1.21 2013/11/24 11:40:55 bcoconni Exp $
+    @version $Id: FGAircraft.h,v 1.23 2015/01/02 22:43:14 bcoconni Exp $
     @see Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
      Using Quaternions", Presence, Vol. 1, No. 4, pp. 404-420  Naval Postgraduate
      School, January 1994
@@ -147,6 +148,7 @@ public:
   double GetWingSpan(void) const { return WingSpan; }
   /// Gets the average wing chord
   double Getcbar(void) const { return cbar; }
+  double GetPitotAngle(void) const { return PitotAngle; }
   double GetWingIncidence(void) const { return WingIncidence; }
   double GetWingIncidenceDeg(void) const { return WingIncidence*radtodeg; }
   double GetHTailArea(void) const { return HTailArea; }
@@ -158,7 +160,12 @@ public:
   double Getvbarh(void) const { return vbarh; } // H. Tail Volume
   double Getvbarv(void) const { return vbarv; } // V. Tail Volume
   const FGColumnVector3& GetMoments(void) const { return vMoments; }
+  const FGColumnVector3& GetGroundMoments(void) const { return in.GroundMoment; }
   double GetMoments(int idx) const { return vMoments(idx); }
+  double GetAeroMoments(int idx) const { return in.AeroMoment(idx); }
+  double GetPropMoments(int idx) const { return in.PropMoment(idx); }
+  double GetExternalMoments(int idx) const { return in.ExternalMoment(idx); }
+  double GetBuoyancyMoments(int idx) const { return in.BuoyantMoment(idx); }
   const FGColumnVector3& GetForces(void) const { return vForces; }
   double GetForces(int idx) const { return vForces(idx); }
   const FGColumnVector3& GetXYZrp(void) const { return vXYZrp; }
@@ -187,6 +194,7 @@ public:
     FGColumnVector3 GroundMoment;
     FGColumnVector3 ExternalMoment;
     FGColumnVector3 BuoyantMoment;
+    FGColumnVector3 DeltaXYZcg;
   } in;
 
 private:
@@ -199,7 +207,7 @@ private:
 
   double WingArea, WingSpan, cbar, WingIncidence;
   double HTailArea, VTailArea, HTailArm, VTailArm;
-  double lbarh,lbarv,vbarh,vbarv;
+  double lbarh,lbarv,vbarh,vbarv,PitotAngle;
   std::string AircraftName;
 
   void Debug(int from);

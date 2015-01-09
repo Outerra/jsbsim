@@ -6,7 +6,7 @@
  Purpose:      Manages the External Forces
  Called by:    FGAircraft
 
- ------------- Copyright (C) 2006  David P. Culp (davidculp2@comcast.net) -------------
+ ------------- Copyright (C) 2006  David P. Culp (daveculp@cox.net) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -40,7 +40,6 @@ INCLUDES
 #include <string>
 
 #include "FGExternalReactions.h"
-#include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
@@ -55,7 +54,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: FGExternalReactions.cpp,v 1.17 2014/01/13 10:46:07 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGExternalReactions.cpp,v 1.20 2015/01/02 22:43:14 bcoconni Exp $");
 IDENT(IdHdr,ID_EXTERNALREACTIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,17 +72,9 @@ FGExternalReactions::FGExternalReactions(FGFDMExec* fdmex) : FGModel(fdmex)
 
 bool FGExternalReactions::Load(Element* el)
 {
-  // check if a file attribute was specified
-  string fname = el->GetAttributeValue("file");
-  FGXMLFileRead XMLFileRead;
-
-  if (!fname.empty()) {
-    string file = FDMExec->GetFullAircraftPath() + "/" + fname;
-    el = XMLFileRead.LoadXMLDocument(file);
-    if (el == 0L) return false;
-  }
-
-  FGModel::Load(el); // Call the base class Load() function to load interface properties.
+  // Call the base class Load() function to load interface properties.
+  if (!FGModel::Load(el))
+    return false;
 
   Debug(2);
 
@@ -155,9 +146,6 @@ bool FGExternalReactions::Run(bool Holding)
 void FGExternalReactions::bind(void)
 {
   typedef double (FGExternalReactions::*PMF)(int) const;
-  PropertyManager->Tie("moments/l-external-lbsft", this, eL, (PMF)&FGExternalReactions::GetMoments);
-  PropertyManager->Tie("moments/m-external-lbsft", this, eM, (PMF)&FGExternalReactions::GetMoments);
-  PropertyManager->Tie("moments/n-external-lbsft", this, eN, (PMF)&FGExternalReactions::GetMoments);
   PropertyManager->Tie("forces/fbx-external-lbs", this, eX, (PMF)&FGExternalReactions::GetForces);
   PropertyManager->Tie("forces/fby-external-lbs", this, eY, (PMF)&FGExternalReactions::GetForces);
   PropertyManager->Tie("forces/fbz-external-lbs", this, eZ, (PMF)&FGExternalReactions::GetForces);

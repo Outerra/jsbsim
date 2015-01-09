@@ -60,7 +60,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: FGAircraft.cpp,v 1.40 2014/05/17 15:29:30 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGAircraft.cpp,v 1.42 2015/01/02 22:43:14 bcoconni Exp $");
 IDENT(IdHdr,ID_AIRCRAFT);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,6 +78,7 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
   lbarh = lbarv = 0.0;
   vbarh = vbarv = 0.0;
   WingIncidence = 0.0;
+  PitotAngle = 0.0;
 
   bind();
 
@@ -118,6 +119,13 @@ bool FGAircraft::Run(bool Holding)
   vForces += in.ExternalForce;
   vForces += in.BuoyantForce;
 
+  // Account for the last CG update from FGMassBalance
+  in.AeroMoment += in.DeltaXYZcg * in.AeroForce;
+  in.PropMoment += in.DeltaXYZcg * in.PropForce;
+  in.GroundMoment += in.DeltaXYZcg * in.GroundForce;
+  in.ExternalMoment += in.DeltaXYZcg * in.ExternalForce;
+  in.BuoyantMoment += in.DeltaXYZcg * in.BuoyantForce;
+
   vMoments = in.AeroMoment;
   vMoments += in.PropMoment;
   vMoments += in.GroundMoment;
@@ -154,6 +162,8 @@ bool FGAircraft::Load(Element* el)
     VTailArea = el->FindElementValueAsNumberConvertTo("vtailarea", "FT2");
   if (el->FindElement("vtailarm"))
     VTailArm = el->FindElementValueAsNumberConvertTo("vtailarm", "FT");
+  if (el->FindElement("pitot_angle"))
+    PitotAngle = el->FindElementValueAsNumberConvertTo("pitot_angle", "RAD");
 
   // Find all LOCATION elements that descend from this METRICS branch of the
   // config file. This would be CG location, eyepoint, etc.
@@ -213,6 +223,18 @@ void FGAircraft::bind(void)
   PropertyManager->Tie("metrics/visualrefpoint-x-in", this, eX, (PMF)&FGAircraft::GetXYZvrp);
   PropertyManager->Tie("metrics/visualrefpoint-y-in", this, eY, (PMF)&FGAircraft::GetXYZvrp);
   PropertyManager->Tie("metrics/visualrefpoint-z-in", this, eZ, (PMF)&FGAircraft::GetXYZvrp);
+  PropertyManager->Tie("moments/l-aero-lbsft", this, eX, (PMF)&FGAircraft::GetAeroMoments);
+  PropertyManager->Tie("moments/m-aero-lbsft", this, eY, (PMF)&FGAircraft::GetAeroMoments);
+  PropertyManager->Tie("moments/n-aero-lbsft", this, eZ, (PMF)&FGAircraft::GetAeroMoments);
+  PropertyManager->Tie("moments/l-prop-lbsft", this, eX, (PMF)&FGAircraft::GetPropMoments);
+  PropertyManager->Tie("moments/m-prop-lbsft", this, eY, (PMF)&FGAircraft::GetPropMoments);
+  PropertyManager->Tie("moments/n-prop-lbsft", this, eZ, (PMF)&FGAircraft::GetPropMoments);
+  PropertyManager->Tie("moments/l-external-lbsft", this, eL, (PMF)&FGAircraft::GetExternalMoments);
+  PropertyManager->Tie("moments/m-external-lbsft", this, eM, (PMF)&FGAircraft::GetExternalMoments);
+  PropertyManager->Tie("moments/n-external-lbsft", this, eN, (PMF)&FGAircraft::GetExternalMoments);
+  PropertyManager->Tie("moments/l-buoyancy-lbsft", this, eL, (PMF)&FGAircraft::GetBuoyancyMoments);
+  PropertyManager->Tie("moments/m-buoyancy-lbsft", this, eM, (PMF)&FGAircraft::GetBuoyancyMoments);
+  PropertyManager->Tie("moments/n-buoyancy-lbsft", this, eN, (PMF)&FGAircraft::GetBuoyancyMoments);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

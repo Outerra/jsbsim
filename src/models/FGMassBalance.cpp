@@ -45,14 +45,13 @@ INCLUDES
 #include "FGMassBalance.h"
 #include "FGFDMExec.h"
 #include "input_output/FGPropertyManager.h"
-#include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGMassBalance.cpp,v 1.49 2014/05/17 15:17:13 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGMassBalance.cpp,v 1.51 2014/11/29 13:47:19 bcoconni Exp $");
 IDENT(IdHdr,ID_MASSBALANCE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,27 +102,9 @@ bool FGMassBalance::InitModel(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGMassBalance::Load(Element* elem)
+static FGMatrix33 ReadInertiaMatrix(Element* document)
 {
-  string element_name = "";
   double bixx, biyy, bizz, bixy, bixz, biyz;
-  string fname="", file="";
-  string separator = "/";
-  FGXMLFileRead XMLFileRead;
-  Element* document;
-
-  fname = elem->GetAttributeValue("file");
-  if (!fname.empty()) {
-    file = FDMExec->GetFullAircraftPath() + separator + fname;
-    document = XMLFileRead.LoadXMLDocument(file);
-    if (document == 0L) return false;
-  } else {
-    document = elem;
-  }
-
-  Name = "Mass Properties Model: " + document->GetAttributeValue("name");
-
-  FGModel::Load(document); // Perform base class Load.
 
   bixx = biyy = bizz = bixy = bixz = biyz = 0.0;
   if (document->FindElement("ixx"))
@@ -138,9 +119,25 @@ bool FGMassBalance::Load(Element* elem)
     bixz = document->FindElementValueAsNumberConvertTo("ixz", "SLUG*FT2");
   if (document->FindElement("iyz"))
     biyz = document->FindElementValueAsNumberConvertTo("iyz", "SLUG*FT2");
-  SetAircraftBaseInertias(FGMatrix33(  bixx,  -bixy,  bixz,
-                                      -bixy,  biyy,  -biyz,
-                                       bixz,  -biyz,  bizz ));
+
+  return FGMatrix33(  bixx,  -bixy,  bixz,
+                      -bixy,  biyy,  -biyz,
+                      bixz,  -biyz,  bizz );
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGMassBalance::Load(Element* document)
+{
+  string element_name = "";
+
+  Name = "Mass Properties Model: " + document->GetAttributeValue("name");
+
+  // Perform base class Pre-Load
+  if (!FGModel::Load(document))
+    return false;
+
+  SetAircraftBaseInertias(ReadInertiaMatrix(document));
   if (document->FindElement("emptywt")) {
     EmptyWeight = document->FindElementValueAsNumberConvertTo("emptywt", "LBS");
   }
@@ -302,6 +299,10 @@ void FGMassBalance::AddPointMass(Element* el)
       pm->CalculateShapeInertia();
     } else {
     }
+  }
+  else {
+    pm->SetPointMassShapeType(PointMass::esUnspecified);
+    pm->SetPointMassMoI(ReadInertiaMatrix(el));
   }
 
   pm->bind(PropertyManager, PointMasses.size());

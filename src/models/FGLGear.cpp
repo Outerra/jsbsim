@@ -44,6 +44,7 @@ INCLUDES
 #include <cstring>
 #include <sstream>
 
+#include "math/FGFunction.h"
 #include "FGLGear.h"
 #include "input_output/FGPropertyManager.h"
 #include "models/FGGroundReactions.h"
@@ -62,7 +63,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: FGLGear.cpp,v 1.116 2014/05/17 15:26:39 jberndt Exp $");
+IDENT(IdSrc,"$Id: FGLGear.cpp,v 1.118 2014/11/30 12:35:32 bcoconni Exp $");
 IDENT(IdHdr,ID_LGEAR);
 
 // Body To Structural (body frame is rotated 180 deg about Y and lengths are given in
@@ -269,7 +270,6 @@ void FGLGear::ResetToIC(void)
 const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
 {
   double gearPos = 1.0;
-  double t = fdmex->GetSimTime();
 
   vFn.InitMatrix();
 
@@ -285,7 +285,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
 
     // Compute the height of the theoretical location of the wheel (if strut is
     // not compressed) with respect to the ground level
-    double height = gearLoc.GetContactPoint(t, contact, normal, terrainVel, dummy);
+    double height = gearLoc.GetContactPoint(contact, normal, terrainVel, dummy);
 
     // Does this surface contact point interact with another surface?
     if (surface) {

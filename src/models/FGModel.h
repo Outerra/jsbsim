@@ -38,11 +38,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "math/FGFunction.h"
-#include "math/FGModelFunctions.h"
-
 #include <string>
-#include <vector>
+
+#include "math/FGModelFunctions.h"
 
 #include "JSBSim_api.h"
 
@@ -50,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MODEL "$Id: FGModel.h,v 1.20 2011/06/21 04:41:54 jberndt Exp $"
+#define ID_MODEL "$Id: FGModel.h,v 1.22 2014/06/09 11:52:07 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -102,6 +100,7 @@ public:
   FGFDMExec* GetExec(void)     {return FDMExec;}
 
   void SetPropertyManager(FGPropertyManager *fgpm) { PropertyManager=fgpm;}
+  virtual std::string FindFullPathName(const std::string& filename) const;
 
 protected:
   int exe_ctr;
@@ -110,7 +109,7 @@ protected:
   /** Loads this model.
       @param el a pointer to the element
       @return true if model is successfully loaded*/
-  virtual bool Load(Element* el) {return FGModelFunctions::Load(el, PropertyManager);}
+  virtual bool Load(Element* el);
 
   virtual void Debug(int from);
 

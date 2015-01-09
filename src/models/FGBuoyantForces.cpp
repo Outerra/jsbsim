@@ -41,14 +41,13 @@ INCLUDES
 #include "FGBuoyantForces.h"
 #include "FGMassBalance.h"
 #include "input_output/FGPropertyManager.h"
-#include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGBuoyantForces.cpp,v 1.26 2014/01/13 10:46:06 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGBuoyantForces.cpp,v 1.28 2015/01/02 22:43:14 bcoconni Exp $");
 IDENT(IdHdr,ID_BUOYANTFORCES);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -117,26 +116,15 @@ bool FGBuoyantForces::Run(bool Holding)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGBuoyantForces::Load(Element *element)
+bool FGBuoyantForces::Load(Element *document)
 {
-  string fname="", file="";
   Element *gas_cell_element;
 
   Debug(2);
 
-  string separator = "/";
-  FGXMLFileRead XMLFileRead;
-  Element* document;
-
-  fname = element->GetAttributeValue("file");
-  if (!fname.empty()) {
-    file = FDMExec->GetFullAircraftPath() + separator + fname;
-    document = XMLFileRead.LoadXMLDocument(file);
-  } else {
-    document = element;
-  }
-
-  FGModel::Load(element); // Perform base class Load
+  // Perform base class Pre-Load
+  if (!FGModel::Load(document))
+    return false;
 
   gas_cell_element = document->FindElement("gas_cell");
   while (gas_cell_element) {
@@ -260,19 +248,12 @@ string FGBuoyantForces::GetBuoyancyValues(const string& delimeter)
 void FGBuoyantForces::bind(void)
 {
   typedef double (FGBuoyantForces::*PGF)(int) const;
-  typedef void   (FGBuoyantForces::*PSF)(int, double);
-  PropertyManager->Tie("moments/l-buoyancy-lbsft", this, eL,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
-  PropertyManager->Tie("moments/m-buoyancy-lbsft", this, eM,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
-  PropertyManager->Tie("moments/n-buoyancy-lbsft", this, eN,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
   PropertyManager->Tie("forces/fbx-buoyancy-lbs", this, eX,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces);
   PropertyManager->Tie("forces/fby-buoyancy-lbs", this, eY,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces);
   PropertyManager->Tie("forces/fbz-buoyancy-lbs", this, eZ,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

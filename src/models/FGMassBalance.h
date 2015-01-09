@@ -50,7 +50,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.31 2014/05/17 15:17:13 jberndt Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.33 2015/01/02 22:43:14 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -131,7 +131,7 @@ public:
   double GetEmptyWeight(void) const {return EmptyWeight;}
   const FGColumnVector3& GetXYZcg(void) const {return vXYZcg;}
   double GetXYZcg(int axis) const  {return vXYZcg(axis);}
-  const FGColumnVector3& GetDeltaXYZcg(void) const {return vDeltaXYZcg;}
+  const FGColumnVector3& GetDeltaXYZcgBody(void) const {return vDeltaXYZcgBody;}
   double GetDeltaXYZcg(int axis) const  {return vDeltaXYZcg(axis);}
 
   /** Computes the inertia contribution of a pointmass.
@@ -269,6 +269,7 @@ private:
     void SetRadius(double r) {Radius = r;}
     void SetLength(double l) {Length = l;}
     void SetName(string name) {Name = name;}
+    void SetPointMassMoI(const FGMatrix33& MoI) { mPMInertia = MoI; }
     double GetPointMassMoI(int r, int c) {return mPMInertia(r,c);}
 
     void bind(FGPropertyManager* PropertyManager, int num);

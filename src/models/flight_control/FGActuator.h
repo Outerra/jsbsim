@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ACTUATOR "$Id: FGActuator.h,v 1.18 2014/01/02 21:58:42 bcoconni Exp $"
+#define ID_ACTUATOR "$Id: FGActuator.h,v 1.19 2014/08/28 13:44:28 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -121,7 +121,7 @@ Example:
 @endcode
 
 @author Jon S. Berndt
-@version $Revision: 1.18 $
+@version $Revision: 1.19 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,12 +158,8 @@ public:
 private:
   double span;
   double bias;
-  bool rate_limited;
-  double rate_limit;
-  double rate_limit_incr;
-  double rate_limit_decr;
-  FGPropertyNode_ptr rate_limit_incr_prop;
-  FGPropertyNode_ptr rate_limit_decr_prop;
+  FGParameter* rate_limit_incr;
+  FGParameter* rate_limit_decr;
   double hysteresis_width;
   double deadband_width;
   double lag;

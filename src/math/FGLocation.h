@@ -42,8 +42,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <iostream>
-
 #include "FGJSBBase.h"
 #include "FGColumnVector3.h"
 #include "FGMatrix33.h"
@@ -55,7 +53,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_LOCATION "$Id: FGLocation.h,v 1.32 2013/10/19 17:59:51 bcoconni Exp $"
+#define ID_LOCATION "$Id: FGLocation.h,v 1.34 2014/11/30 12:35:32 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -154,7 +152,7 @@ CLASS DOCUMENTATION
     @see W. C. Durham "Aircraft Dynamics & Control", section 2.2
 
     @author Mathias Froehlich
-    @version $Id: FGLocation.h,v 1.32 2013/10/19 17:59:51 bcoconni Exp $
+    @version $Id: FGLocation.h,v 1.34 2014/11/30 12:35:32 bcoconni Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -337,13 +335,13 @@ public:
       @param altitudeASL altitude above Sea Level in feet.
       @see SetGroundCallback */
   void SetAltitudeASL(double altitudeASL)
-  { SetRadius(GroundCallback->GetSeaLevelRadius(*this) + altitudeASL); }
+  { SetRadius(GetSeaLevelRadius() + altitudeASL); }
 
   /** Set the altitude above ground level.
       @param altitudeAGL altitude above Ground Level in feet.
       @see SetGroundCallback */
-  void SetAltitudeAGL(double altitudeAGL, double time)
-  { SetRadius(GroundCallback->GetTerrainGeoCentRadius(time, *this) + altitudeAGL); }
+  void SetAltitudeAGL(double altitudeAGL)
+  { SetRadius(GetTerrainRadius() + altitudeAGL); }
 
   /** Get the local sea level radius
       @return the sea level radius at the location in feet.
@@ -354,36 +352,34 @@ public:
   /** Get the local terrain radius
       @return the terrain level radius at the location in feet.
       @see SetGroundCallback */
-  double GetTerrainRadius(double time) const
-  { ComputeDerived(); return GroundCallback->GetTerrainGeoCentRadius(time, *this); }
+  double GetTerrainRadius(void) const
+  { ComputeDerived(); return GroundCallback->GetTerrainGeoCentRadius(*this); }
 
   /** Get the altitude above sea level.
       @return the altitude ASL in feet.
       @see SetGroundCallback */
-  double GetAltitudeASL() const
+  double GetAltitudeASL(void) const
   { ComputeDerived(); return GroundCallback->GetAltitude(*this); }
 
   /** Get the altitude above ground level.
       @return the altitude AGL in feet.
       @see SetGroundCallback */
-  double GetAltitudeAGL(double time) const {
+  double GetAltitudeAGL(void) const {
     FGLocation c;
     FGColumnVector3 n,v,w;
-    return GetContactPoint(time,c,n,v,w);
+    return GetContactPoint(c,n,v,w);
   }
 
   /** Get terrain contact point information below the current location.
-      @param time    Simulation time
       @param contact Contact point location
       @param normal  Terrain normal vector in contact point    (ECEF frame)
       @param v       Terrain linear velocity in contact point  (ECEF frame)
       @param w       Terrain angular velocity in contact point (ECEF frame)
       @return Location altitude above contact point (AGL) in feet.
       @see SetGroundCallback */
-  double GetContactPoint(double time,
-                         FGLocation& contact, FGColumnVector3& normal,
+  double GetContactPoint(FGLocation& contact, FGColumnVector3& normal,
                          FGColumnVector3& v, FGColumnVector3& w) const
-  { ComputeDerived(); return GroundCallback->GetAGLevel(time, *this, contact, normal, v, w); }
+  { ComputeDerived(); return GroundCallback->GetAGLevel(*this, contact, normal, v, w); }
   ///@}
 
   /** Sets the ground callback pointer. The FGGroundCallback instance will be
@@ -634,8 +630,6 @@ private:
   mutable double mGeodLat;
   mutable double GeodeticAltitude;
 
-  double initial_longitude;
-
   /** The cached rotation matrices from and to the associated frames. */
   mutable FGMatrix33 mTl2ec;
   mutable FGMatrix33 mTec2l;
@@ -647,14 +641,11 @@ private:
   double epa;
 
   /* Terms for geodetic latitude calculation. Values are from WGS84 model */
-  double a;    // Earth semimajor axis in feet (6,378,137.0 meters)
-  double b;    // Earth semiminor axis in feet (6,356,752.3142 meters)
-  double a2;
-  double b2;
-  double e;    // Earth eccentricity
+  double a;    // Earth semimajor axis in feet
   double e2;   // Earth eccentricity squared
-  double eps2; //
-  double f;    // Flattening
+  double c;
+  double ec;
+  double ec2;
 
   /** A data validity flag.
       This class implements caching of the derived values like the
