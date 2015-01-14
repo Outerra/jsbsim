@@ -95,8 +95,11 @@ bool FGOutputTextFile::Load(Element* el)
 
 bool FGOutputTextFile::OpenFile(void)
 {
-  datafile.clear();
-  datafile.open(Filename.c_str());
+  if (!datafile.is_open()) {
+    datafile.clear();
+    datafile.open(Filename.c_str());
+  }
+
   if (!datafile) {
     cerr << endl << fgred << highint << "ERROR: unable to open the file "
          << reset << Filename.c_str() << endl
