@@ -164,7 +164,7 @@ void FGRocket::Calculate(void)
 
   RunPreFunctions();
 
-  PropellantFlowRate = (FuelExpended + OxidizerExpended)/in.TotalDeltaT;
+  PropellantFlowRate = in.TotalDeltaT > 0.0 ? (FuelExpended + OxidizerExpended)/in.TotalDeltaT : 0.0;
   TotalPropellantExpended += FuelExpended + OxidizerExpended;
   // If Isp has been specified as a function, override the value of Isp to that, otherwise
   // assume a constant value is given.
