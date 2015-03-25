@@ -662,6 +662,8 @@ public:
 
   void bind(FGPropertyManager* pm);
 
+  void InitializeIC(void);
+
 private:
   FGColumnVector3 vUVW_NED;
   FGColumnVector3 vPQR_body;
@@ -684,7 +686,6 @@ private:
   bool Load_v1(Element* document);
   bool Load_v2(Element* document);
 
-  void InitializeIC(void);
   void SetEulerAngleRadIC(int idx, double angle);
   void SetBodyVelFpsIC(int idx, double vel);
   void SetNEDVelFpsIC(int idx, double vel);
