@@ -485,7 +485,7 @@ void FGPropagate::RecomputeLocalTerrainVelocity()
 {
   FGLocation contact;
   FGColumnVector3 normal;
-  VState.vLocation.GetContactPoint(contact, normal, LocalTerrainVelocity,
+  VState.vLocation.GetContactPoint(VState.vLocation.GetRadius(), contact, normal, LocalTerrainVelocity,
                                    LocalTerrainAngularVelocity);
 }
 

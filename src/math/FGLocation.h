@@ -367,19 +367,21 @@ public:
   double GetAltitudeAGL(void) const {
     FGLocation c;
     FGColumnVector3 n,v,w;
-    return GetContactPoint(c,n,v,w);
+    return GetContactPoint(GetRadius(),c,n,v,w);
   }
 
   /** Get terrain contact point information below the current location.
+      @param maxdist max distance from location to check for contact, else return maxdist
       @param contact Contact point location
       @param normal  Terrain normal vector in contact point    (ECEF frame)
       @param v       Terrain linear velocity in contact point  (ECEF frame)
       @param w       Terrain angular velocity in contact point (ECEF frame)
       @return Location altitude above contact point (AGL) in feet.
       @see SetGroundCallback */
-  double GetContactPoint(FGLocation& contact, FGColumnVector3& normal,
+  double GetContactPoint(double maxdist,
+                         FGLocation& contact, FGColumnVector3& normal,
                          FGColumnVector3& v, FGColumnVector3& w) const
-  { ComputeDerived(); return GroundCallback->GetAGLevel(*this, contact, normal, v, w); }
+  { ComputeDerived(); return GroundCallback->GetAGLevel(maxdist, *this, contact, normal, v, w); }
   ///@}
 
   /** Sets the ground callback pointer. The FGGroundCallback instance will be

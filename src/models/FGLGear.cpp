@@ -285,7 +285,8 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
 
     // Compute the height of the theoretical location of the wheel (if strut is
     // not compressed) with respect to the ground level
-    double height = gearLoc.GetContactPoint(contact, normal, terrainVel, dummy);
+    const double maxdist = 20; //ft
+    double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, dummy);
 
     // Does this surface contact point interact with another surface?
     if (surface) {
