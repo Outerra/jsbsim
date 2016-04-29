@@ -398,7 +398,7 @@ void FGTrim::trimOnGround(void)
 
     FGColumnVector3 normal, vDummy;
     FGLocation lDummy;
-    double height = gearLoc.GetContactPoint(lDummy, normal, vDummy, vDummy);
+    double height = gearLoc.GetContactPoint(hmin, lDummy, normal, vDummy, vDummy);
     c.normal = Tec2b * normal;
 
     contacts.push_back(c);

@@ -54,7 +54,7 @@ double FGDefaultGroundCallback::GetAltitude(const FGLocation& loc) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGDefaultGroundCallback::GetAGLevel(double t, const FGLocation& loc,
+double FGDefaultGroundCallback::GetAGLevel(double t, double maxdist, const FGLocation& loc,
                                     FGLocation& contact, FGColumnVector3& normal,
                                     FGColumnVector3& vel, FGColumnVector3& angularVel) const
 {

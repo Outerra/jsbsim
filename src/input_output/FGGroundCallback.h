@@ -84,6 +84,7 @@ public:
   /** Compute the altitude above ground.
       The altitude depends on time t and location l.
       @param t simulation time
+      @param maxdist max distance from location to check for contact, else return maxdist
       @param l location
       @param contact Contact point location below the location l
       @param normal Normal vector at the contact point
@@ -91,7 +92,7 @@ public:
       @param w Angular velocity at the contact point
       @return altitude above ground
    */
-  virtual double GetAGLevel(double t, const FGLocation& location,
+  virtual double GetAGLevel(double t, double maxdist, const FGLocation& location,
                             FGLocation& contact,
                             FGColumnVector3& normal, FGColumnVector3& v,
                             FGColumnVector3& w) const = 0;
@@ -99,16 +100,18 @@ public:
   /** Compute the altitude above ground.
       The altitude depends on location l.
       @param l location
+      @param maxdist max distance from location to check for contact, else return maxdist
       @param contact Contact point location below the location l
       @param normal Normal vector at the contact point
       @param v Linear velocity at the contact point
       @param w Angular velocity at the contact point
       @return altitude above ground
    */
-  virtual double GetAGLevel(const FGLocation& location, FGLocation& contact,
+  virtual double GetAGLevel(double maxdist,
+                            const FGLocation& location, FGLocation& contact,
                             FGColumnVector3& normal, FGColumnVector3& v,
                             FGColumnVector3& w) const
-  { return GetAGLevel(time, location, contact, normal, v, w); }
+  { return GetAGLevel(time, maxdist, location, contact, normal, v, w); }
 
   /** Compute the local terrain radius
       @param t simulation time
@@ -160,7 +163,7 @@ public:
 
    double GetAltitude(const FGLocation& l) const;
 
-   double GetAGLevel(double t, const FGLocation& location,
+   double GetAGLevel(double t, double maxdist, const FGLocation& location,
                      FGLocation& contact,
                      FGColumnVector3& normal, FGColumnVector3& v,
                      FGColumnVector3& w) const;
