@@ -661,7 +661,6 @@ public:
       @param index of the engine to be checked
       @return true if the engine is running. */
   bool IsEngineRunning(unsigned int n) const { return (enginesRunning & (1 << n)) != 0; }
-  bool IsEngineRunning(unsigned int n) const { return (enginesRunning & (1 << n)) != 0; }
   
   /** Does initialization file call for trim ?
       @return true if initialization file (version 1) called for trim. */

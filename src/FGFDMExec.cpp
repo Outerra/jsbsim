@@ -233,7 +233,7 @@ bool FGFDMExec::Allocate(void)
   // Note that this does not affect the order in which the models will be
   // executed later.
   Models[eInertial]          = new FGInertial(this);
-  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
+  //SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
 
   // See the eModels enum specification in the header file. The order of the
   // enums specifies the order of execution. The Models[] vector is the primary
