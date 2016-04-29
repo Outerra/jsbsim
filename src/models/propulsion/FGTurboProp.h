@@ -47,7 +47,7 @@ INCLUDES
 #include "math/FGTable.h"
 
 #include "JSBSim_api.h"
-#define ID_TURBOPROP "$Id: FGTurboProp.h,v 1.18 2013/11/24 14:22:22 bcoconni Exp $"
+#define ID_TURBOPROP "$Id: FGTurboProp.h,v 1.22 2015/12/07 10:01:48 ehofman Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -191,8 +191,8 @@ private:
   double StarterN1;            // rotates of generator maked by starter [%]
   double MaxStartingTime;      // maximal time for start [s] (-1 means not used)
   double RPM;                  // shaft RPM
-  double Velocity;
-  double rho;
+  //double Velocity;
+  //double rho;
   double PSFC;                 // Power specific fuel comsumption [lb/(HP*hr)] at best efficiency
   double CombustionEfficiency;
 
@@ -216,13 +216,15 @@ private:
 
   void SetDefaults(void);
   bool Load(FGFDMExec *exec, Element *el);
-  void bindmodel(void);
+  void bindmodel(FGPropertyManager* pm);
   void Debug(int from);
 
   FGTable* ITT_N1;             // ITT temperature depending on throttle command
   FGTable* EnginePowerRPM_N1;
   FGTable* EnginePowerVC;
+  FGFunction* EnginePowerVCFN;
   FGTable* CombustionEfficiency_N1;
+  FGFDMExec* FDMExec;
 };
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

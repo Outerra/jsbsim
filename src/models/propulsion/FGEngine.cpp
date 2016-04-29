@@ -53,17 +53,16 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGEngine.cpp,v 1.60 2014/06/09 11:52:07 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGEngine.cpp,v 1.67 2015/09/27 09:54:21 bcoconni Exp $");
 IDENT(IdHdr,ID_ENGINE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGEngine::FGEngine(FGFDMExec* exec, int engine_number, struct Inputs& input)
+FGEngine::FGEngine(int engine_number, struct Inputs& input)
                       : in(input), EngineNumber(engine_number)
 {
-  Name = "";
   Type = etUnknown;
   X = Y = Z = 0.0;
   EnginePitch = EngineYaw = 0.0;
@@ -71,7 +70,7 @@ FGEngine::FGEngine(FGFDMExec* exec, int engine_number, struct Inputs& input)
   FuelExpended = 0.0;
   MaxThrottle = 1.0;
   MinThrottle = 0.0;
-
+  FuelDensity = 6.02;
   Debug(0);
 }
 
@@ -113,7 +112,7 @@ double FGEngine::CalcFuelNeed(void)
 
 unsigned int FGEngine::GetSourceTank(unsigned int i) const
 {
-  if (i >= 0 && i < SourceTanks.size()) {
+  if (i < SourceTanks.size()) {
     return SourceTanks[i];
   } else {
     throw("No such source tank is available for this engine");
@@ -172,26 +171,24 @@ void FGEngine::LoadThrusterInputs()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGEngine::LoadThruster(Element *thruster_element)
+void FGEngine::LoadThruster(FGFDMExec* exec, Element *thruster_element)
 {
   if (thruster_element->FindElement("propeller")) {
     Element *document = thruster_element->FindElement("propeller");
-    Thruster = new FGPropeller(FDMExec, document, EngineNumber);
+    Thruster = new FGPropeller(exec, document, EngineNumber);
   } else if (thruster_element->FindElement("nozzle")) {
     Element *document = thruster_element->FindElement("nozzle");
-    Thruster = new FGNozzle(FDMExec, document, EngineNumber);
+    Thruster = new FGNozzle(exec, document, EngineNumber);
   } else if (thruster_element->FindElement("rotor")) {
     Element *document = thruster_element->FindElement("rotor");
-    Thruster = new FGRotor(FDMExec, document, EngineNumber);
+    Thruster = new FGRotor(exec, document, EngineNumber);
   } else if (thruster_element->FindElement("direct")) {
     Element *document = thruster_element->FindElement("direct");
-    Thruster = new FGThruster( FDMExec, document, EngineNumber);
+    Thruster = new FGThruster(exec, document, EngineNumber);
   } else {
     cerr << thruster_element->ReadFrom() << " Unknown thruster type" << endl;
     throw("Failed to load the thruster");
   }
-
-  Thruster->SetdeltaT(in.TotalDeltaT);
 
   Debug(2);
 }
@@ -204,9 +201,7 @@ bool FGEngine::Load(FGFDMExec *exec, Element *engine_element)
   Element* local_element;
   FGColumnVector3 location, orientation;
 
-  FDMExec = exec;
-
-  PropertyManager = FDMExec->GetPropertyManager();
+  FGPropertyManager* PropertyManager = exec->GetPropertyManager();
 
   Name = engine_element->GetAttributeValue("name");
 
@@ -230,8 +225,8 @@ bool FGEngine::Load(FGFDMExec *exec, Element *engine_element)
   local_element = parent_element->FindElement("thruster");
   if (local_element) {
     try {
-      LoadThruster(local_element);
-    } catch (std::string str) {
+      LoadThruster(exec, local_element);
+    } catch (std::string& str) {
       throw("Error loading engine " + Name + ". " + str);
     }
   } else {

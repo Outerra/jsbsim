@@ -125,7 +125,7 @@ public:
             comp->setFdm(m_fdm);
             m_components.push_back(comp);
         }
-        int getSize() const
+        size_t getSize() const
         {
             return m_components.size();
         }
@@ -153,12 +153,12 @@ public:
         std::vector<double> get() const
         {
             std::vector<double> val;
-            for (int i=0;i<getSize();i++) val.push_back(m_components[i]->get());
+            for (unsigned int i=0;i<getSize();i++) val.push_back(m_components[i]->get());
             return val;
         }
         void get(double * array) const
         {
-            for (int i=0;i<getSize();i++) array[i] = m_components[i]->get();
+            for (unsigned int i=0;i<getSize();i++) array[i] = m_components[i]->get();
         }
         double getDeriv(int i)
         {
@@ -167,21 +167,21 @@ public:
         std::vector<double> getDeriv() const
         {
             std::vector<double> val;
-            for (int i=0;i<getSize();i++) val.push_back(m_components[i]->getDeriv());
+            for (unsigned int i=0;i<getSize();i++) val.push_back(m_components[i]->getDeriv());
             return val;
         }
         void getDeriv(double * array) const
         {
-            for (int i=0;i<getSize();i++) array[i] = m_components[i]->getDeriv();
+            for (unsigned int i=0;i<getSize();i++) array[i] = m_components[i]->getDeriv();
         }
         void set(std::vector<double> vals)
         {
-            for (int i=0;i<getSize();i++) m_components[i]->set(vals[i]);
+            for (unsigned int i=0;i<getSize();i++) m_components[i]->set(vals[i]);
             m_stateSpace->run();
         }
         void set(double * array)
         {
-            for (int i=0;i<getSize();i++) m_components[i]->set(array[i]);
+            for (unsigned int i=0;i<getSize();i++) m_components[i]->set(array[i]);
             m_stateSpace->run();
         }
         std::string getName(int i) const
@@ -191,7 +191,7 @@ public:
         std::vector<std::string> getName() const
         {
             std::vector<std::string> name;
-            for (int i=0;i<getSize();i++) name.push_back(m_components[i]->getName());
+            for (unsigned int i=0;i<getSize();i++) name.push_back(m_components[i]->getName());
             return name;
         }
         std::string getUnit(int i) const
@@ -201,7 +201,7 @@ public:
         std::vector<std::string> getUnit() const
         {
             std::vector<std::string> unit;
-            for (int i=0;i<getSize();i++) unit.push_back(m_components[i]->getUnit());
+            for (unsigned int i=0;i<getSize();i++) unit.push_back(m_components[i]->getUnit());
             return unit;
         }
         void clear() {
@@ -223,7 +223,7 @@ public:
 
     void run() {
         // initialize
-        m_fdm->Initialize(m_fdm->GetIC());
+      m_fdm->Initialize(m_fdm->GetIC());
         for (unsigned int i=0; i<m_fdm->GetPropulsion()->GetNumEngines(); i++) {
             m_fdm->GetPropulsion()->GetEngine(i)->InitRunning();
         }
@@ -262,7 +262,7 @@ public:
 
     double stateSum() {
         double sum = 0;
-        for (int i=0;i<x.getSize();i++) sum += x.get(i);
+        for (unsigned int i=0;i<x.getSize();i++) sum += x.get(i);
         return sum;
     }
 

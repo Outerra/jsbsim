@@ -33,18 +33,18 @@ INCLUDES
 #include <iomanip>
 #include <cstdlib>
 #include <cmath>
+
 #include "FGFunction.h"
 #include "FGTable.h"
 #include "FGPropertyValue.h"
 #include "FGRealValue.h"
 #include "input_output/FGXMLElement.h"
-#include "input_output/FGPropertyManager.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFunction.cpp,v 1.55 2014/01/13 10:46:03 ehofman Exp $");
+IDENT(IdSrc,"$Id: FGFunction.cpp,v 1.58 2015/07/12 19:34:08 bcoconni Exp $");
 IDENT(IdHdr,ID_FUNCTION);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,9 +255,8 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
           property_name = replace(property_name,"#",Prefix);
         }
       }
-      FGPropertyNode* newNode = 0L;
       if (PropertyManager->HasNode(property_name)) {
-        newNode = PropertyManager->GetNode(property_name);
+        FGPropertyNode* newNode = PropertyManager->GetNode(property_name);
         Parameters.push_back(new FGPropertyValue( newNode ));
       } else {
         // cerr << fgcyan << "Warning: The property " + property_name + " is initially undefined."
@@ -550,9 +549,9 @@ double FGFunction::GetValue(void) const
     break;
   case eSwitch:
     {
-      unsigned int n = Parameters.size()-1;
+      size_t n = Parameters.size()-1;
       i = int(temp+0.5);
-      if (i >= 0u && i < n) {
+      if (i < n) {
         temp = Parameters[i+1]->GetValue();
       } else {
         throw(string("The switch function index selected a value above the range of supplied values"
@@ -562,7 +561,7 @@ double FGFunction::GetValue(void) const
     break;
   case eInterpolate1D:
     {
-      unsigned int sz = Parameters.size();
+      size_t sz = Parameters.size();
       if (temp <= Parameters[1]->GetValue()) {
         temp = Parameters[2]->GetValue();
       } else if (temp >= Parameters[sz-2]->GetValue()) {

@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPiston.cpp,v 1.77 2014/06/08 12:00:35 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGPiston.cpp,v 1.82 2016/01/02 17:42:53 bcoconni Exp $");
 IDENT(IdHdr,ID_PISTON);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,9 +59,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Inputs& input)
-  : FGEngine(exec, engine_number, input),
+  : FGEngine(engine_number, input),
   R_air(287.3),                  // Gas constant for air J/Kg/K
-  rho_fuel(800),                 // estimate
   calorific_value_fuel(47.3e6),  // J/Kg
   Cp_air(1005),                  // Specific heat (constant pressure) J/Kg/K
   Cp_fuel(1700),
@@ -70,8 +69,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   Load(exec, el);
 
   Element *table_element;
-  string token;
-  string name="";
+  FGPropertyManager* PropertyManager = exec->GetPropertyManager();
 
   // Defaults and initializations
 
@@ -237,7 +235,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
   }
 
   while((table_element = el->FindNextElement("table")) != 0) {
-    name = table_element->GetAttributeValue("name");
+    string name = table_element->GetAttributeValue("name");
     try {
       if (name == "COMBUSTION") {
         Lookup_Combustion_Efficiency = new FGTable(PropertyManager, table_element);
@@ -246,7 +244,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number, struct Input
       } else {
         cerr << "Unknown table type: " << name << " in piston engine definition." << endl;
       }
-    } catch (std::string str) {
+    } catch (std::string& str) {
       // Make sure allocated resources are freed before rethrowing.
       // (C++ standard guarantees that a null pointer deletion is no-op).
       delete Lookup_Combustion_Efficiency;
@@ -472,8 +470,6 @@ void FGPiston::Calculate(void)
 
   RunPreFunctions();
 
-  TotalDeltaT = ( in.TotalDeltaT < 1e-9 ) ? 1.0 : in.TotalDeltaT;
-
 /* The thruster controls the engine RPM because it encapsulates the gear ratio and other transmission variables */
   RPM = Thruster->GetEngineRPM();
 
@@ -646,7 +642,7 @@ void FGPiston::doMAP(void)
 
   // Add a variable lag to manifold pressure changes
   double dMAP=(TMAP - p_ram * map_coefficient);
-  if (ManifoldPressureLag > TotalDeltaT) dMAP *= TotalDeltaT/ManifoldPressureLag;
+  if (ManifoldPressureLag > in.TotalDeltaT) dMAP *= in.TotalDeltaT/ManifoldPressureLag;
 
   TMAP -=dMAP;
 
@@ -752,8 +748,8 @@ void FGPiston::doFuelFlow(void)
     FuelFlowRate = 0.0;
     m_dot_fuel = 0.0;
   }
-  FuelFlow_pph = FuelFlowRate  * 3600;  // seconds to hours
-  FuelFlow_gph = FuelFlow_pph / 6.0;    // Assumes 6 lbs / gallon
+  FuelFlow_pph = FuelFlowRate  * 3600;
+  FuelFlow_gph = FuelFlow_pph / FuelDensity;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -835,7 +831,7 @@ void FGPiston::doEGT(void)
   } else {  // Drop towards ambient - guess an appropriate time constant for now
     combustion_efficiency = 0;
     dEGTdt = (RankineToKelvin(in.Temperature) - ExhaustGasTemp_degK) / 100.0;
-    delta_T_exhaust = dEGTdt * TotalDeltaT;
+    delta_T_exhaust = dEGTdt * in.TotalDeltaT;
 
     ExhaustGasTemp_degK += delta_T_exhaust;
   }
@@ -875,7 +871,7 @@ void FGPiston::doCHT(void)
   double HeatCapacityCylinderHead = CpCylinderHead * MassCylinderHead;
 
   CylinderHeadTemp_degK +=
-    (dqdt_cylinder_head / HeatCapacityCylinderHead) * TotalDeltaT;
+    (dqdt_cylinder_head / HeatCapacityCylinderHead) * in.TotalDeltaT;
 
 }
 
@@ -910,7 +906,7 @@ void FGPiston::doOilTemperature(void)
 
   double dOilTempdt = (target_oil_temp - OilTemp_degK) / time_constant;
 
-  OilTemp_degK += (dOilTempdt * TotalDeltaT);
+  OilTemp_degK += (dOilTempdt * in.TotalDeltaT);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

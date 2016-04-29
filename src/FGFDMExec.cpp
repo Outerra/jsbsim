@@ -45,6 +45,7 @@ INCLUDES
 #include <iostream>
 #include <iterator>
 #include <cstdlib>
+#include <iomanip>
 
 #include "FGFDMExec.h"
 #include "models/atmosphere/FGStandardAtmosphere.h"
@@ -63,20 +64,15 @@ INCLUDES
 #include "models/FGAuxiliary.h"
 #include "models/FGInput.h"
 #include "models/FGOutput.h"
-#include "initialization/FGInitialCondition.h"
 #include "initialization/FGTrim.h"
-#include "initialization/FGSimplexTrim.h"
-#include "initialization/FGLinearization.h"
-#include "input_output/FGPropertyManager.h"
 #include "input_output/FGScript.h"
 #include "input_output/FGXMLFileRead.h"
-#include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.166 2015/01/02 22:43:13 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.186 2016/01/10 16:32:26 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,7 +91,6 @@ FGFDMExec::FGFDMExec(
 {
   Frame           = 0;
   Error           = 0;
-  //SetGroundCallback(new FGDefaultGroundCallback());
   SetGroundCallback(gc);
   IC              = 0;
   Trim            = 0;
@@ -110,6 +105,7 @@ FGFDMExec::FGFDMExec(
   Terminate = false;
   StandAlone = false;
   ResetMode = 0;
+  RandomSeed = 0;
 
   IncrementThenHolding = false;  // increment then hold is off by default
   TimeStepsUntilHold = -1;
@@ -162,70 +158,27 @@ FGFDMExec::FGFDMExec(
   // this is to catch errors in binding member functions to the property tree.
   try {
     Allocate();
-  } catch ( string msg ) {
+  } catch (const string& msg ) {
     cout << "Caught error: " << msg << endl;
     exit(1);
   }
 
   trim_status = false;
   ta_mode     = 99;
+  trim_completed = 0;
 
   Constructing = true;
   typedef int (FGFDMExec::*iPMF)(void) const;
-//  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis, false);
   instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim, false);
-  instance->Tie("simulation/do_simplex_trim", this, (iPMF)0, &FGFDMExec::DoSimplexTrim);
-  instance->Tie("simulation/do_linearization", this, (iPMF)0, &FGFDMExec::DoLinearization);
   instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions, false);
   instance->Tie("simulation/disperse", this, &FGFDMExec::GetDisperse);
-  instance->Tie("simulation/randomseed", this, (iPMF)0, &FGFDMExec::SRand, false);
+  instance->Tie("simulation/randomseed", this, (iPMF)&FGFDMExec::SRand, &FGFDMExec::SRand, false);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   instance->Tie("simulation/sim-time-sec", this, &FGFDMExec::GetSimTime);
   instance->Tie("simulation/dt", this, &FGFDMExec::GetDeltaT);
   instance->Tie("simulation/jsbsim-debug", this, &FGFDMExec::GetDebugLevel, &FGFDMExec::SetDebugLevel);
   instance->Tie("simulation/frame", (int *)&Frame, false);
-
-  // simplex trim properties
-  instanceRoot->SetDouble("trim/solver/rtol",0.0001);
-  instanceRoot->SetDouble("trim/solver/speed",2);
-  instanceRoot->SetDouble("trim/solver/abstol",0.001);
-  instanceRoot->SetDouble("trim/solver/iterMax",2000);
-  instanceRoot->SetInt("trim/solver/debugLevel",0);
-  instanceRoot->SetDouble("trim/solver/random",0);
-  instanceRoot->SetBool("trim/solver/showSimplex",false);
-  instanceRoot->SetBool("trim/solver/showConvergence",false);
-  instanceRoot->SetBool("trim/solver/pause",false);
-  instanceRoot->SetBool("trim/solver/variablePropPitch",false);
-
-  instanceRoot->SetDouble("trim/solver/throttleGuess",0.50);
-  instanceRoot->SetDouble("trim/solver/throttleMin",0.0);
-  instanceRoot->SetDouble("trim/solver/throttleMax",1.0);
-  instanceRoot->SetDouble("trim/solver/throttleStep",0.1);
-
-  instanceRoot->SetDouble("trim/solver/aileronGuess",0);
-  instanceRoot->SetDouble("trim/solver/aileronMin",-1.00);
-  instanceRoot->SetDouble("trim/solver/aileronMax",1.00);
-  instanceRoot->SetDouble("trim/solver/aileronStep",0.1);
-
-  instanceRoot->SetDouble("trim/solver/rudderGuess",0);
-  instanceRoot->SetDouble("trim/solver/rudderMin",-1.00);
-  instanceRoot->SetDouble("trim/solver/rudderMax",1.00);
-  instanceRoot->SetDouble("trim/solver/rudderStep",0.1);
-
-  instanceRoot->SetDouble("trim/solver/elevatorGuess",-0.1);
-  instanceRoot->SetDouble("trim/solver/elevatorMin",-1.0);
-  instanceRoot->SetDouble("trim/solver/elevatorMax",1.0);
-  instanceRoot->SetDouble("trim/solver/elevatorStep",0.1);
-
-  instanceRoot->SetDouble("trim/solver/alphaGuess",0.05);
-  instanceRoot->SetDouble("trim/solver/alphaMin",-0.1);
-  instanceRoot->SetDouble("trim/solver/alphaMax",.18);
-  instanceRoot->SetDouble("trim/solver/alphaStep",0.05);
-
-  instanceRoot->SetDouble("trim/solver/betaGuess",0);
-  instanceRoot->SetDouble("trim/solver/betaMin",-0.1);
-  instanceRoot->SetDouble("trim/solver/betaMax",0.1);
-  instanceRoot->SetDouble("trim/solver/betaStep",0.0001);
+  instance->Tie("simulation/trim-completed", (int *)&trim_completed, false);
 
   Constructing = false;
 }
@@ -251,7 +204,7 @@ FGFDMExec::~FGFDMExec()
          FDMctr = 0;
       }
     }
-  } catch ( string msg ) {
+  } catch (const string& msg ) {
     cout << "Caught error: " << msg << endl;
   }
 
@@ -259,6 +212,8 @@ FGFDMExec::~FGFDMExec()
   ChildFDMList.clear();
 
   PropertyCatalog.clear();
+  
+  SetGroundCallback(0);
 
   if (FDMctr > 0) (*FDMctr)--;
 
@@ -273,22 +228,28 @@ bool FGFDMExec::Allocate(void)
 
   Models.resize(eNumStandardModels);
 
-  // See the eModels enum specification in the header file. The order of the enums
-  // specifies the order of execution. The Models[] vector is the primary
+  // First build the inertial model since some other models are relying on
+  // the inertial model and the ground callback to build themselves.
+  // Note that this does not affect the order in which the models will be
+  // executed later.
+  Models[eInertial]          = new FGInertial(this);
+  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
+
+  // See the eModels enum specification in the header file. The order of the
+  // enums specifies the order of execution. The Models[] vector is the primary
   // storage array for the list of models.
   Models[ePropagate]         = new FGPropagate(this);
   Models[eInput]             = new FGInput(this);
-  Models[eInertial]          = new FGInertial(this);
   Models[eAtmosphere]        = new FGStandardAtmosphere(this);
   Models[eWinds]             = new FGWinds(this);
-  Models[eAuxiliary]         = new FGAuxiliary(this);
   Models[eSystems]           = new FGFCS(this);
+  Models[eMassBalance]       = new FGMassBalance(this);
+  Models[eAuxiliary]         = new FGAuxiliary(this);
   Models[ePropulsion]        = new FGPropulsion(this);
   Models[eAerodynamics]      = new FGAerodynamics (this);
   Models[eGroundReactions]   = new FGGroundReactions(this);
   Models[eExternalReactions] = new FGExternalReactions(this);
   Models[eBuoyantForces]     = new FGBuoyantForces(this);
-  Models[eMassBalance]       = new FGMassBalance(this);
   Models[eAircraft]          = new FGAircraft(this);
   Models[eAccelerations]     = new FGAccelerations(this);
   Models[eOutput]            = new FGOutput(this);
@@ -298,14 +259,14 @@ bool FGFDMExec::Allocate(void)
   Inertial = (FGInertial*)Models[eInertial];
   Atmosphere = (FGAtmosphere*)Models[eAtmosphere];
   Winds = (FGWinds*)Models[eWinds];
-  Auxiliary = (FGAuxiliary*)Models[eAuxiliary];
   FCS = (FGFCS*)Models[eSystems];
+  MassBalance = (FGMassBalance*)Models[eMassBalance];
+  Auxiliary = (FGAuxiliary*)Models[eAuxiliary];
   Propulsion = (FGPropulsion*)Models[ePropulsion];
   Aerodynamics = (FGAerodynamics*)Models[eAerodynamics];
   GroundReactions = (FGGroundReactions*)Models[eGroundReactions];
   ExternalReactions = (FGExternalReactions*)Models[eExternalReactions];
   BuoyantForces = (FGBuoyantForces*)Models[eBuoyantForces];
-  MassBalance = (FGMassBalance*)Models[eMassBalance];
   Aircraft = (FGAircraft*)Models[eAircraft];
   Accelerations = (FGAccelerations*)Models[eAccelerations];
   Output = (FGOutput*)Models[eOutput];
@@ -317,8 +278,8 @@ bool FGFDMExec::Allocate(void)
 
   // Initialize models
   for (unsigned int i = 0; i < Models.size(); i++) {
-    // The Output model must not be initialized prior to IC loading
-    if (i == eOutput) continue;
+    // The Input/Output models must not be initialized prior to IC loading
+    if (i == eInput || i == eOutput) continue;
 
     LoadInputs(i);
     Models[i]->InitModel();
@@ -348,14 +309,6 @@ bool FGFDMExec::DeAllocate(void)
 
   modelLoaded = false;
   return modelLoaded;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGFDMExec::Schedule(FGModel* model, int rate)
-{
-  model->SetRate(rate);
-  Models.push_back(model);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -434,7 +387,8 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Auxiliary->in.Tl2b         = Propagate->GetTl2b();
     Auxiliary->in.Tb2l         = Propagate->GetTb2l();
     Auxiliary->in.vPQR         = Propagate->GetPQR();
-    Auxiliary->in.vPQRdot      = Accelerations->GetPQRdot();
+    Auxiliary->in.vPQRi        = Propagate->GetPQRi();
+    Auxiliary->in.vPQRidot     = Accelerations->GetPQRidot();
     Auxiliary->in.vUVW         = Propagate->GetUVW();
     Auxiliary->in.vUVWdot      = Accelerations->GetUVWdot();
     Auxiliary->in.vVel         = Propagate->GetVel();
@@ -453,13 +407,11 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Auxiliary->in.TurbPQR      = Winds->GetTurbPQR();
     Auxiliary->in.WindPsi      = Winds->GetWindPsi();
     Auxiliary->in.Vwind        = Winds->GetTotalWindNED().Magnitude();
-    Auxiliary->in.PitotAngle   = Aircraft->GetPitotAngle();
     break;
   case eSystems:
     // Dynamic inputs come into the components that FCS manages through properties
     break;
   case ePropulsion:
-    Propulsion->in.SLPressure       = Atmosphere->GetPressureSL();
     Propulsion->in.Pressure         = Atmosphere->GetPressure();
     Propulsion->in.PressureRatio    = Atmosphere->GetPressureRatio();
     Propulsion->in.Temperature      = Atmosphere->GetTemperature();
@@ -467,7 +419,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Propulsion->in.Density          = Atmosphere->GetDensity();
     Propulsion->in.Soundspeed       = Atmosphere->GetSoundSpeed();
     Propulsion->in.TotalPressure    = Auxiliary->GetTotalPressure();
-    Propulsion->in.TotalTempearture = Auxiliary->GetTotalTemperature();
     Propulsion->in.Vc               = Auxiliary->GetVcalibratedKTS();
     Propulsion->in.Vt               = Auxiliary->GetVt();
     Propulsion->in.qbar             = Auxiliary->Getqbar();
@@ -546,7 +497,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Aircraft->in.GroundMoment  = GroundReactions->GetMoments();
     Aircraft->in.ExternalMoment = ExternalReactions->GetMoments();
     Aircraft->in.BuoyantMoment = BuoyantForces->GetMoments();
-    Aircraft->in.DeltaXYZcg    = MassBalance->GetDeltaXYZcgBody();
     break;
   case eAccelerations:
     Accelerations->in.J        = MassBalance->GetJ();
@@ -557,7 +507,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.Tec2i    = Propagate->GetTec2i();
     Accelerations->in.qAttitudeECI = Propagate->GetQuaternionECI();
     Accelerations->in.Moment   = Aircraft->GetMoments();
-    Accelerations->in.GroundMoment  = Aircraft->GetGroundMoments();
+    Accelerations->in.GroundMoment  = GroundReactions->GetMoments();
     Accelerations->in.Force    = Aircraft->GetForces();
     Accelerations->in.GroundForce   = GroundReactions->GetForces();
     Accelerations->in.GAccel   = Inertial->GetGAccel(Propagate->GetRadius());
@@ -571,7 +521,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.MultipliersList = GroundReactions->GetMultipliersList();
     Accelerations->in.TerrainVelocity = Propagate->GetTerrainVelocity();
     Accelerations->in.TerrainAngularVel = Propagate->GetTerrainAngularVelocity();
-    Accelerations->in.DeltaXYZcg = MassBalance->GetDeltaXYZcgBody();
     break;
   default:
     break;
@@ -587,7 +536,6 @@ void FGFDMExec::LoadPlanetConstants(void)
   Propagate->in.SemiMajor        = Inertial->GetSemimajor();
   Propagate->in.SemiMinor        = Inertial->GetSemiminor();
   Auxiliary->in.SLGravity        = Inertial->SLgravity();
-  Auxiliary->in.ReferenceRadius  = Inertial->GetRefRadius();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -595,13 +543,13 @@ void FGFDMExec::LoadPlanetConstants(void)
 void FGFDMExec::LoadModelConstants(void)
 {
   Winds->in.wingspan             = Aircraft->GetWingSpan();
-  FCS->in.NumGear                = GroundReactions->GetNumGearUnits();
   Aerodynamics->in.Wingarea      = Aircraft->GetWingArea();
   Aerodynamics->in.Wingchord     = Aircraft->Getcbar();
   Aerodynamics->in.Wingincidence = Aircraft->GetWingIncidence();
   Aerodynamics->in.Wingspan      = Aircraft->GetWingSpan();
   Auxiliary->in.Wingspan         = Aircraft->GetWingSpan();
   Auxiliary->in.Wingchord        = Aircraft->Getcbar();
+  Auxiliary->in.PitotAngle       = Aircraft->GetPitotAngle();
   GroundReactions->in.vXYZcg     = MassBalance->GetXYZcg();
 
   LoadPlanetConstants();
@@ -614,18 +562,29 @@ bool FGFDMExec::RunIC(void)
 {
   FGPropulsion* propulsion = (FGPropulsion*)Models[ePropulsion];
 
-  Models[eOutput]->InitModel();
-
   SuspendIntegration(); // saves the integration rate, dt, then sets it to 0.0.
   Initialize(IC);
+
+  Models[eInput]->InitModel();
+  Models[eOutput]->InitModel();
+
   Run();
   ResumeIntegration(); // Restores the integration rate to what it was.
+
+  if (debug_lvl > 0) {
+    MassBalance->GetMassPropertiesReport(0);
+
+    cout << endl << fgblue << highint
+         << "End of vehicle configuration loading." << endl
+         << "-------------------------------------------------------------------------------"
+         << reset << std::setprecision(6) << endl;
+  }
 
   for (unsigned int n=0; n < propulsion->GetNumEngines(); ++n) {
     if (IC->IsEngineRunning(n)) {
       try {
         propulsion->InitRunning(n);
-      } catch (string str) {
+      } catch (const string& str) {
         cerr << str << endl;
         return false;
       }
@@ -637,20 +596,12 @@ bool FGFDMExec::RunIC(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFDMExec::Initialize(FGInitialCondition *FGIC)
+void FGFDMExec::Initialize(FGInitialCondition* FGIC)
 {
-  Setsim_time(0.0);
-
-  Propagate->SetInitialState( FGIC );
-  LoadInputs(eInertial);
-  Inertial->Run(false);
-  LoadInputs(eAccelerations);
-  Accelerations->Run(false);
-  LoadInputs(ePropagate);
-  Propagate->InitializeDerivatives();
+  Propagate->SetInitialState(FGIC);
   Winds->SetWindNED(FGIC->GetWindNEDFpsIC());
-  LoadInputs(eMassBalance);
-  MassBalance->Run(false);
+  Run();
+  Propagate->InitializeDerivatives();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -662,16 +613,19 @@ void FGFDMExec::ResetToInitialConditions(int mode)
   if (mode == 1) Output->SetStartNewOutput();
 
   for (unsigned int i = 0; i < Models.size(); i++) {
-    // The Output model will be initialized during the RunIC() execution
-    if (i == eOutput) continue;
+    // The Input/Output models will be initialized during the RunIC() execution
+    if (i == eInput || i == eOutput) continue;
 
     LoadInputs(i);
     Models[i]->InitModel();
   }
 
-  if (Script) Script->ResetEvents();
-
   RunIC();
+
+  if (Script)
+    Script->ResetEvents();
+  else
+    Setsim_time(0.0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -692,7 +646,7 @@ vector <string> FGFDMExec::EnumerateFDMs(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadScript(const string& script, double deltaT, const string initfile)
+bool FGFDMExec::LoadScript(const string& script, double deltaT, const string& initfile)
 {
   bool result;
 
@@ -718,9 +672,7 @@ bool FGFDMExec::LoadModel(const string& AircraftPath, const string& EnginePath, 
 
 bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
 {
-  string token;
   string aircraftCfgFileName;
-  Element* element = 0L;
   bool result = false; // initialize result to false, indicating input file not yet read
 
   modelName = model; // Set the class modelName attribute
@@ -752,7 +704,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     if (IsChild) debug_lvl = saved_debug_lvl;
 
     // Process the fileheader element in the aircraft config file. This element is OPTIONAL.
-    element = document->FindElement("fileheader");
+    Element* element = document->FindElement("fileheader");
     if (element) {
       result = ReadFileHeader(element);
       if (!result) {
@@ -838,7 +790,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the system element[s]. This element is OPTIONAL, and there may be more than one.
     element = document->FindElement("system");
     while (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element, FGFCS::stSystem);
+      result = ((FGFCS*)Models[eSystems])->Load(element);
       if (!result) {
         cerr << endl << "Aircraft system element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -849,7 +801,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the autopilot element. This element is OPTIONAL.
     element = document->FindElement("autopilot");
     if (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element, FGFCS::stAutoPilot);
+      result = ((FGFCS*)Models[eSystems])->Load(element);
       if (!result) {
         cerr << endl << "Aircraft autopilot element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -859,7 +811,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the flight_control element. This element is OPTIONAL.
     element = document->FindElement("flight_control");
     if (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element, FGFCS::stFCS);
+      result = ((FGFCS*)Models[eSystems])->Load(element);
       if (!result) {
         cerr << endl << "Aircraft flight_control element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -878,14 +830,13 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
       cerr << endl << "No expected aerodynamics element was found in the aircraft config file." << endl;
     }
 
-    // Process the input element. This element is OPTIONAL.
+    // Process the input element. This element is OPTIONAL, and there may be more than one.
     element = document->FindElement("input");
-    if (element) {
-      result = ((FGInput*)Models[eInput])->Load(element);
-      if (!result) {
-        cerr << endl << "Aircraft input element has problems in file " << aircraftCfgFileName << endl;
-        return result;
-      }
+    while (element) {
+      if (!static_cast<FGInput*>(Models[eInput])->Load(element))
+        return false;
+
+      element = document->FindNextElement("input");
     }
 
     // Process the output element[s]. This element is OPTIONAL, and there may be
@@ -913,21 +864,6 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     LoadModelConstants();
 
     modelLoaded = true;
-
-    if (debug_lvl > 0) {
-      LoadInputs(eMassBalance); // Update all input mass properties for the report.
-      Models[eMassBalance]->Run(false);  // Update all mass properties for the report.
-      LoadInputs(ePropulsion); // Update propulsion properties for the report.
-      Models[ePropulsion]->Run(false);  // Update propulsion properties for the report.
-      LoadInputs(eMassBalance); // Update all (one more time) input mass properties for the report.
-      Models[eMassBalance]->Run(false);  // Update all (one more time) mass properties for the report.
-      ((FGMassBalance*)Models[eMassBalance])->GetMassPropertiesReport(0);
-
-      cout << endl << fgblue << highint
-           << "End of vehicle configuration loading." << endl
-           << "-------------------------------------------------------------------------------"
-           << reset << endl;
-    }
 
     if (IsChild) debug_lvl = saved_debug_lvl;
 
@@ -961,12 +897,11 @@ string FGFDMExec::GetPropulsionTankReport()
 void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
 {
   struct PropertyCatalogStructure* pcsNew = new struct PropertyCatalogStructure;
-  int node_idx = 0;
 
   for (int i=0; i<pcs->node->nChildren(); i++) {
     string access="";
     pcsNew->base_string = pcs->base_string + "/" + pcs->node->getChild(i)->getName();
-    node_idx = pcs->node->getChild(i)->getIndex();
+    int node_idx = pcs->node->getChild(i)->getIndex();
     if (node_idx != 0) {
       pcsNew->base_string = CreateIndexedPropertyName(pcsNew->base_string, node_idx);
     }
@@ -1116,8 +1051,6 @@ bool FGFDMExec::ReadChild(Element* el)
   // Load the model given the aircraft name
   // reset debug level to prior setting
 
-  string token;
-
   struct childData* child = new childData;
 
   child->exec = new FGFDMExec(FGLocation::GetGroundCallback(), Root, FDMctr);
@@ -1198,54 +1131,28 @@ void FGFDMExec::CheckIncrementalHold(void)
 
 void FGFDMExec::DoTrim(int mode)
 {
-  double saved_time;
-
   if (Constructing) return;
 
-  if (mode < 0 || mode > JSBSim::tNone) {
-    cerr << endl << "Illegal trimming mode!" << endl << endl;
-    return;
-  }
-  saved_time = sim_time;
+  if (mode < 0 || mode > JSBSim::tNone)
+    throw("Illegal trimming mode!");
+
   FGTrim trim(this, (JSBSim::TrimMode)mode);
-  if ( !trim.DoTrim() ) cerr << endl << "Trim Failed" << endl << endl;
+  bool success = trim.DoTrim();
   trim.Report();
-  Setsim_time(saved_time);
-}
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if (!success)
+    throw("Trim Failed");
 
-void FGFDMExec::DoSimplexTrim(int mode)
-{
-  double saved_time;
-  if (Constructing) return;
-  if (mode < 0 || mode > JSBSim::tNone) {
-      cerr << endl << "Illegal trimming mode!" << endl << endl;
-      return;
-  }
-  saved_time = sim_time;
-  FGSimplexTrim trim(this, (JSBSim::TrimMode)mode);
-  Setsim_time(saved_time);
-  std::cout << "dT: " << dT << std::endl;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGFDMExec::DoLinearization(int mode)
-{
-  double saved_time;
-  if (Constructing) return;
-  saved_time = sim_time;
-  FGLinearization lin(this,mode);
-  Setsim_time(saved_time);
+  trim_completed = 1;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGFDMExec::SRand(int sr)
 {
+  RandomSeed = sr;
   gaussian_random_number_phase = 0;
-  srand(sr);
+  srand(RandomSeed);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

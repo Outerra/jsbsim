@@ -21,17 +21,25 @@ from libcpp.vector cimport vector
 
 import os, platform
 
+cdef extern from "ExceptionManagement.h":
+    cdef void convertJSBSimToPyExc()
+
 cdef extern from "models/FGPropulsion.h" namespace "JSBSim":
     cdef cppclass c_FGPropulsion "JSBSim::FGPropulsion":
         c_FGPropulsion(c_FGFDMExec* fdm)
         void InitRunning(int n)
         int GetNumEngines()
 
+cdef extern from "initialization/FGInitialCondition.h" namespace "JSBSim":
+    cdef cppclass c_FGInitialCondition "JSBSim::FGInitialCondition":
+        c_FGInitialCondition(c_FGFDMExec* fdm)
+        bool Load(string rstfile, bool useStoredPath)
+
 cdef extern from "FGFDMExec.h" namespace "JSBSim":
     cdef cppclass c_FGFDMExec "JSBSim::FGFDMExec":
         c_FGFDMExec(int root, int fdmctr)
         void Unbind()
-        bool Run() except +
+        bool Run() except +convertJSBSimToPyExc
         bool RunIC() except +
         bool LoadModel(string model,
                        bool add_model_to_path)
@@ -51,7 +59,7 @@ cdef extern from "FGFDMExec.h" namespace "JSBSim":
         string GetRootDir()
         string GetFullAircraftPath()
         double GetPropertyValue(string property)
-        void SetPropertyValue(string property, double value)
+        void SetPropertyValue(string property, double value) except +convertJSBSimToPyExc
         string GetModelName()
         bool SetOutputDirectives(string fname) except +
         #void ForceOutput(int idx=0)
@@ -59,8 +67,6 @@ cdef extern from "FGFDMExec.h" namespace "JSBSim":
         bool SetOutputFileName(int n, string fname)
         string GetOutputFileName(int n)
         void DoTrim(int mode) except +
-        void DoSimplexTrim(int mode) except +
-        void DoLinearization(int mode)
         void DisableOutput()
         void EnableOutput()
         void Hold()
@@ -85,6 +91,7 @@ cdef extern from "FGFDMExec.h" namespace "JSBSim":
         double IncrTime()
         int GetDebugLevel()
         c_FGPropulsion* GetPropulsion()
+        c_FGInitialCondition* GetIC()
 
 # this is the python wrapper class
 cdef class FGFDMExec:
@@ -142,7 +149,7 @@ cdef class FGFDMExec:
         for path in search_paths:
             if verbose:
                 print '\t', path
-            if path is not  None and os.path.isdir(path):
+            if path is not None and os.path.isdir(path):
                 root_dir = path
                 break
         if root_dir is None:
@@ -164,6 +171,12 @@ cdef class FGFDMExec:
                 self.get_aircraft_path(),
                 self.get_engine_path(),
                 self.get_systems_path())
+
+    def __getitem__(self, key):
+        return self.get_property_value(key)
+
+    def __setitem__(self, key, value):
+        self.set_property_value(key, value)
 
     def run(self):
         """
@@ -385,27 +398,6 @@ cdef class FGFDMExec:
         """
         self.thisptr.DoTrim(mode)
 
-    def do_simplex_trim(self, mode):
-        """
-        Executes simplex trimming in the selected mode.
-        @param mode Specifies how to trim:
-            - tLongitudinal=0
-            - tFull
-            - tGround
-            - tPullup
-            - tCustom
-            - tTurn
-            - tNone
-        """
-        self.thisptr.DoSimplexTrim(mode)
-
-    def do_linearization(self):
-        """
-        Executes linearization with state-space output
-            * You must trim first to get an accurate state-space model
-        """
-        self.thisptr.DoLinearization(0)
-
     def do_disable_output(self):
         """
         Disables data logging to all outputs.
@@ -564,3 +556,6 @@ cdef class FGFDMExec:
 
     def propulsion_get_num_engines(self):
         return self.thisptr.GetPropulsion().GetNumEngines()
+
+    def load_ic(self, rstfile, useStoredPath):
+        return self.thisptr.GetIC().Load(rstfile, useStoredPath)

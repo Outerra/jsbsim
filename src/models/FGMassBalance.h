@@ -50,13 +50,11 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.33 2015/01/02 22:43:14 bcoconni Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.36 2015/08/22 18:09:00 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-using std::string;
 
 namespace JSBSim {
 
@@ -131,7 +129,7 @@ public:
   double GetEmptyWeight(void) const {return EmptyWeight;}
   const FGColumnVector3& GetXYZcg(void) const {return vXYZcg;}
   double GetXYZcg(int axis) const  {return vXYZcg(axis);}
-  const FGColumnVector3& GetDeltaXYZcgBody(void) const {return vDeltaXYZcgBody;}
+  const FGColumnVector3& GetDeltaXYZcg(void) const {return vDeltaXYZcg;}
   double GetDeltaXYZcg(int axis) const  {return vDeltaXYZcg(axis);}
 
   /** Computes the inertia contribution of a pointmass.
@@ -250,7 +248,7 @@ private:
     double Weight; /// Weight in pounds.
     double Radius; /// Radius in feet.
     double Length; /// Length in feet.
-    string Name;
+    std::string Name;
     FGMatrix33 mPMInertia;
 
     double GetPointMassLocation(int axis) const {return Location(axis);}
@@ -258,7 +256,7 @@ private:
     esShape GetShapeType(void) {return eShapeType;}
     const FGColumnVector3& GetLocation(void) {return Location;}
     const FGMatrix33& GetPointMassInertia(void) {return mPMInertia;}
-    const string& GetName(void) {return Name;}
+    const std::string& GetName(void) {return Name;}
 
     void SetPointMassLocation(int axis, double value) {Location(axis) = value;}
     void SetPointMassWeight(double wt) {
@@ -268,11 +266,11 @@ private:
     void SetPointMassShapeType(esShape st) {eShapeType = st;}
     void SetRadius(double r) {Radius = r;}
     void SetLength(double l) {Length = l;}
-    void SetName(string name) {Name = name;}
+    void SetName(const std::string& name) {Name = name;}
     void SetPointMassMoI(const FGMatrix33& MoI) { mPMInertia = MoI; }
     double GetPointMassMoI(int r, int c) {return mPMInertia(r,c);}
 
-    void bind(FGPropertyManager* PropertyManager, int num);
+    void bind(FGPropertyManager* PropertyManager, unsigned int num);
   };
 
   std::vector <struct PointMass*> PointMasses;

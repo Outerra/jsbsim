@@ -39,11 +39,10 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "initialization/FGInitialCondition.h"
+#include "initialization/FGTrim.h"
 #include "FGFDMExec.h"
 #include "input_output/FGGroundCallback.h"
 #include "input_output/FGXMLFileRead.h"
-#include "input_output/FGXMLElement.h"
 
 #if !defined(__GNUC__) && !defined(sgi) && !defined(_MSC_VER)
 #  include <time>
@@ -73,7 +72,7 @@ using JSBSim::Element;
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: JSBSim.cpp,v 1.84 2014/05/17 15:36:45 jberndt Exp $");
+IDENT(IdSrc,"$Id: JSBSim.cpp,v 1.87 2015/11/24 13:06:24 ehofman Exp $");
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GLOBAL DATA
@@ -88,6 +87,8 @@ vector <string> LogDirectiveName;
 vector <string> CommandLineProperties;
 vector <double> CommandLinePropertyValues;
 JSBSim::FGFDMExec* FDMExec;
+JSBSim::FGTrim* trimmer;
+
 bool realtime;
 bool play_nice;
 bool suspend;
@@ -279,14 +280,16 @@ int main(int argc, char* argv[])
 {
   try {
     real_main(argc, argv);
-  } catch (string msg) {
+  } catch (string& msg) {
     std::cerr << "FATAL ERROR: JSBSim terminated with an exception."
               << std::endl << "The message was: " << msg << std::endl;
+    return 1;
   } catch (...) {
     std::cerr << "FATAL ERROR: JSBSim terminated with an unknown exception."
               << std::endl;
-    throw;
+    return 1;
   }
+  return 0;
 }
 
 int real_main(int argc, char* argv[])
@@ -444,7 +447,18 @@ int real_main(int argc, char* argv[])
 
   // Dump the simulation state (position, orientation, etc.)
   FDMExec->GetPropagate()->DumpState();
-
+  
+  if (FDMExec->GetIC()->NeedTrim()) {
+    trimmer = new JSBSim::FGTrim( FDMExec );
+    try {
+      trimmer->DoTrim();
+      delete trimmer;
+    } catch (string& msg) {
+      cerr << endl << msg << endl << endl;
+      exit(1);
+    }
+  }
+  
   cout << endl << JSBSim::FGFDMExec::fggreen << JSBSim::FGFDMExec::highint
        << "---- JSBSim Execution beginning ... --------------------------------------------"
        << JSBSim::FGFDMExec::reset << endl << endl;

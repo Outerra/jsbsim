@@ -57,7 +57,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGTrim.cpp,v 1.24 2014/11/30 12:35:32 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGTrim.cpp,v 1.31 2016/01/17 15:54:04 bcoconni Exp $");
 IDENT(IdHdr,ID_TRIM);
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,6 +74,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,TrimMode tt)
 
   Debug=0;DebugLevel=0;
   fdmex=FDMExec;
+  fgic = *fdmex->GetIC();
   total_its=0;
   gamma_fallback=false;
   mode=tt;
@@ -196,13 +197,10 @@ bool FGTrim::DoTrim(void) {
   double aileron0 = FCS->GetDaCmd();
   double rudder0 = FCS->GetDrCmd();
   double PitchTrim0 = FCS->GetPitchTrimCmd();
-  fgic = *fdmex->GetIC();
 
   for(int i=0;i < fdmex->GetGroundReactions()->GetNumGearUnits();i++){
     fdmex->GetGroundReactions()->GetGearUnit(i)->SetReport(false);
   }
-
-  fdmex->DisableOutput();
 
   fdmex->SetTrimStatus(true);
   fdmex->SuspendIntegration();
@@ -212,6 +210,8 @@ bool FGTrim::DoTrim(void) {
   fgic.SetRRadpsIC(0.0);
 
   if (mode == tGround) {
+    fdmex->Initialize(&fgic);
+    fdmex->Run();
     trimOnGround();
     double theta = fgic.GetThetaRadIC();
     double phi = fgic.GetPhiRadIC();
@@ -342,7 +342,6 @@ bool FGTrim::DoTrim(void) {
 
   fdmex->ResumeIntegration();
   fdmex->SetTrimStatus(false);
-  fdmex->EnableOutput();
 
   for(int i=0;i < fdmex->GetGroundReactions()->GetNumGearUnits();i++){
     fdmex->GetGroundReactions()->GetGearUnit(i)->SetReport(true);
@@ -506,7 +505,11 @@ FGTrim::RotationParameters FGTrim::calcRotation(vector<ContactPoints>& contacts,
     double DistPlane = d0 * DotProduct(u, iter->normal) / length;
     // The coordinate of the point of intersection 'P' between the circle and
     // the ground is (0, DistPlane, alpha) in the basis (u, v, t)
-    double alpha = sqrt(sqrRadius - DistPlane * DistPlane);
+    double mag = sqrRadius - DistPlane * DistPlane;
+    if (mag < 0) {
+      cout << "FGTrim::calcRotation DistPlane^2 larger than sqrRadius" << endl;
+    }
+    double alpha = sqrt(max(mag, 0.0));
     FGColumnVector3 CP = alpha * t + DistPlane * v;
     // The transformation is now constructed: we can extract the angle using the
     // classical formulas (cosine is obtained from the dot product and sine from

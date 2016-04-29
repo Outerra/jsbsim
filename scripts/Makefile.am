@@ -11,7 +11,6 @@ EXTRA_DIST = \
   ball_chute.xml \
   ball_orbit.xml \
   ball_orbit_g_torque.xml \
-  blank.xml \
   ah1s_flight_test.xml \
   c1721.xml \
   c1722.xml \
@@ -32,4 +31,5 @@ EXTRA_DIST = \
   x153.xml \
   f16_runway_test.xml \
   c172_elevation_test.xml \
-  c172_runway_at_rest_cg_shift.xml
+  c172_runway_at_rest_cg_shift.xml \
+  ZLT-NT-moored-1.xml

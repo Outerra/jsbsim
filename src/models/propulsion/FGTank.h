@@ -55,7 +55,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_TANK "$Id: FGTank.h,v 1.28 2014/05/17 15:09:42 jberndt Exp $"
+#define ID_TANK "$Id: FGTank.h,v 1.31 2015/12/09 04:28:18 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -137,6 +137,7 @@ CLASS DOCUMENTATION
   </drain_location>
   <radius unit="{IN | FT | M}"> {number} </radius>
   <capacity unit="{LBS | KG}"> {number} </capacity>
+  <inertia_factor> {number:0-1} </inertia_factor>
   <contents unit="{LBS | KG}"> {number} </contents>
   <temperature> {number} </temperature> <!-- must be degrees fahrenheit -->
   <standpipe unit="{LBS | KG"}> {number} </standpipe>
@@ -333,17 +334,15 @@ private:
   double InertiaFactor;
   double PctFull;
   double Contents, InitialContents;
-  double PreviousUsed;
   double Area;
   double Temperature, InitialTemperature;
   double Standpipe, InitialStandpipe;
   double ExternalFlow;
   bool  Selected;
   int Priority, InitialPriority;
-  FGFDMExec* Exec;
-  FGPropertyManager* PropertyManager;
 
   void CalculateInertias(void);
+  void bind(FGPropertyManager* PropertyManager);
   void Debug(int from);
 };
 }

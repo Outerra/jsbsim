@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAuxiliary.cpp,v 1.68 2014/12/27 05:41:11 dpculp Exp $");
+IDENT(IdSrc,"$Id: FGAuxiliary.cpp,v 1.71 2016/01/10 12:12:59 bcoconni Exp $");
 IDENT(IdHdr,ID_AUXILIARY);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +78,6 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
   hoverbmac = hoverbcg = 0.0;
   Re = 0.0;
   Nz = Ny = 0.0;
-  lon_relative_position = lat_relative_position = relative_position = 0.0;
 
   vPilotAccel.InitMatrix();
   vPilotAccelN.InitMatrix();
@@ -117,7 +116,6 @@ bool FGAuxiliary::InitModel(void)
   hoverbmac = hoverbcg = 0.0;
   Re = 0.0;
   Nz = Ny = 0.0;
-  lon_relative_position = lat_relative_position = relative_position = 0.0;
 
   vPilotAccel.InitMatrix();
   vPilotAccelN.InitMatrix();
@@ -141,8 +139,6 @@ FGAuxiliary::~FGAuxiliary()
 
 bool FGAuxiliary::Run(bool Holding)
 {
-  double A,B,D;
-
   if (FGModel::Run(Holding)) return true; // return true if error returned from base class
   if (Holding) return false;
 
@@ -219,20 +215,10 @@ bool FGAuxiliary::Run(bool Holding)
   Vpitot = vPitotUVW(eU);
   if (Vpitot < 0.0) Vpitot = 0.0;
   MachPitot = Vpitot / in.SoundSpeed;
-  double MachP2 = MachPitot * MachPitot;
+  pt = PitotTotalPressure(MachPitot, in.Pressure);
 
-  if (MachPitot < 1) {   // Calculate total pressure assuming isentropic flow
-    pt = in.Pressure*pow((1 + 0.2*MachP2),3.5);
-  } else {
-    // Use Rayleigh pitot tube formula for normal shock in front of pitot tube
-    B = 5.76 * MachP2 / (5.6*MachP2 - 0.8);
-    D = (2.8 * MachP2 - 0.4) * 0.4167;
-    pt = in.Pressure*pow(B,3.5)*D;
-  }
-
-  A = pow(((pt-in.Pressure)/in.PressureSL + 1),0.28571);
   if (abs(MachPitot) > 0.0) {
-    vcas = sqrt(7 * in.PressureSL / in.DensitySL * (A-1));
+    vcas = VcalibratedFromMach(MachPitot, in.Pressure, in.PressureSL, in.DensitySL);
     veas = sqrt(2 * qbar / in.DensitySL);
     vtrue = 1116.43559 * Mach * sqrt(in.Temperature / 518.67);
   } else {
@@ -244,8 +230,8 @@ bool FGAuxiliary::Run(bool Holding)
   // Nz is Acceleration in "g's", along normal axis (-Z body axis)
   Nz = -vNcg(eZ);
   Ny =  vNcg(eY);
-  vPilotAccel = in.vBodyAccel + in.vPQRdot * in.ToEyePt;
-  vPilotAccel += in.vPQR * (in.vPQR * in.ToEyePt);
+  vPilotAccel = in.vBodyAccel + in.vPQRidot * in.ToEyePt;
+  vPilotAccel += in.vPQRi * (in.vPQRi * in.ToEyePt);
 
   vNwcg = mTb2w * vNcg;
   vNwcg(eZ) = 1.0 - vNwcg(eZ);
@@ -260,9 +246,6 @@ bool FGAuxiliary::Run(bool Holding)
 
   FGColumnVector3 vMac = in.Tb2l * in.RPBody;
   hoverbmac = (in.DistanceAGL + vMac(3)) / in.Wingspan;
-
-  // When all models are executed calculate the distance from the initial point.
-  CalculateRelativePosition();
 
   return false;
 }
@@ -346,13 +329,6 @@ double FGAuxiliary::GetCrossWind(void) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGAuxiliary::GethVRP(void) const
-{
-  return vLocationVRP.GetRadius() - in.ReferenceRadius;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 double FGAuxiliary::GetNlf(void) const
 {
   if (in.Mass != 0)
@@ -363,13 +339,36 @@ double FGAuxiliary::GetNlf(void) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAuxiliary::CalculateRelativePosition(void)  //ToDo: This belongs elsewhere - perhaps in FGPropagate or Exec
+double FGAuxiliary::GetLongitudeRelativePosition(void) const
 {
-  const double earth_radius_mt = in.ReferenceRadius*fttom;
-  lat_relative_position=(in.vLocation.GetLatitude()  - FDMExec->GetIC()->GetLatitudeDegIC() *degtorad)*earth_radius_mt;
-  lon_relative_position=(in.vLocation.GetLongitude() - FDMExec->GetIC()->GetLongitudeDegIC()*degtorad)*earth_radius_mt;
-  relative_position = sqrt(lat_relative_position*lat_relative_position + lon_relative_position*lon_relative_position);
-};
+  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
+                    FDMExec->GetIC()->GetLatitudeRadIC(),
+                    in.vLocation.GetSeaLevelRadius());
+  return source.GetDistanceTo(in.vLocation.GetLongitude(),
+                              FDMExec->GetIC()->GetLatitudeRadIC()) * fttom;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGAuxiliary::GetLatitudeRelativePosition(void) const
+{
+  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
+                    FDMExec->GetIC()->GetLatitudeRadIC(),
+                    in.vLocation.GetSeaLevelRadius());
+  return source.GetDistanceTo(FDMExec->GetIC()->GetLongitudeRadIC(),
+                              in.vLocation.GetLatitude()) * fttom;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGAuxiliary::GetDistanceRelativePosition(void) const
+{
+  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
+                    FDMExec->GetIC()->GetLatitudeRadIC(),
+                    in.vLocation.GetSeaLevelRadius());
+  return source.GetDistanceTo(in.vLocation.GetLongitude(),
+                              in.vLocation.GetLatitude()) * fttom;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

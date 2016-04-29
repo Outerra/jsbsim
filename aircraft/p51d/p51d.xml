@@ -16,7 +16,7 @@ Hal V. Engel hvengel@astound.net
     <fileheader>
         <author> Aeromatic / Jon Berndt / DATCOM / Hal V. Engel</author>
         <filecreationdate> 2001-01-01 </filecreationdate>
-        <version> $Revision: 1.21 $ </version>
+        <version> $Revision: 1.23 $ </version>
         <description> Advanced model of P-51D fighter (Beta) </description>
       <note>
         This model was created using publicly available data, publicly available
@@ -462,7 +462,7 @@ Hal V. Engel hvengel@astound.net
         </tank>
         <tank type="FUEL">    <!-- Tank number 3 left drop -->
             <location unit="IN">
-                <x> 97,5 </x>
+                <x> 97.5 </x>
                 <y> -198 </y>
                 <z> -25 </z>
             </location>
@@ -678,6 +678,8 @@ Hal V. Engel hvengel@astound.net
             </kinematic>
         </channel>   
         
+        <!-- Deactivate this channel for stand-alone runs since its purpose is
+             to transmit FlightGear brake parameters to JSBSim
         <channel name="Brakes">
         
            <summer name="systems/brakes/brake-left">
@@ -716,7 +718,8 @@ Hal V. Engel hvengel@astound.net
                 <output>fcs/right-brake-cmd-norm</output>
             </aerosurface_scale>
         
-        </channel> 
+        </channel>
+        --> 
         
     </flight_control>
     

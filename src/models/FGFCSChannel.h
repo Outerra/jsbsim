@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCSCHANNEL "$Id: FGFCSChannel.h,v 1.4 2013/12/22 15:21:51 bcoconni Exp $"
+#define ID_FCSCHANNEL "$Id: FGFCSChannel.h,v 1.6 2015/09/28 08:57:32 ehofman Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -70,7 +70,7 @@ typedef std::vector <FGFCSComponent*> FCSCompVec;
 class FGFCSChannel {
 public:
   /// Constructor
-  FGFCSChannel(string name, FGPropertyNode* node=0) :
+  FGFCSChannel(std::string name, FGPropertyNode* node=0) :
   OnOffNode(node), Name(name)
   {
   }
@@ -80,12 +80,12 @@ public:
     FCSComponents.clear();
   }
   /// Retrieves the name of the channel
-  string GetName() {return Name;}
+  std::string GetName() {return Name;}
 
   /// Adds a component to a channel
   void Add(FGFCSComponent* comp) {FCSComponents.push_back(comp);}
   /// Returns the number of components in the channel.
-  unsigned int GetNumComponents() {return FCSComponents.size();}
+  size_t GetNumComponents() {return FCSComponents.size();}
   /// Retrieves a specific component.
   FGFCSComponent* GetComponent(unsigned int i) {
     if (i >= GetNumComponents()) {
@@ -114,7 +114,7 @@ public:
   private:
     FCSCompVec FCSComponents;
     FGConstPropertyNode_ptr OnOffNode;
-    string Name;
+    std::string Name;
 };
 
 }

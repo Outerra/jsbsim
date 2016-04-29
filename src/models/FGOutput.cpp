@@ -44,6 +44,7 @@ INCLUDES
 #include "input_output/FGOutputSocket.h"
 #include "input_output/FGOutputTextFile.h"
 #include "input_output/FGOutputFG.h"
+#include "input_output/FGUDPOutputSocket.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGModelLoader.h"
@@ -52,7 +53,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGOutput.cpp,v 1.80 2014/09/12 20:10:05 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGOutput.cpp,v 1.86 2015/08/23 09:43:31 bcoconni Exp $");
 IDENT(IdHdr,ID_OUTPUT);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,6 +65,7 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
   typedef int (FGOutput::*iOPV)(void) const;
 
   Name = "FGOutput";
+  enabled = true;
 
   PropertyManager->Tie("simulation/force-output", this, (iOPV)0, &FGOutput::ForceOutput, false);
 
@@ -100,11 +102,14 @@ bool FGOutput::InitModel(void)
 
 bool FGOutput::Run(bool Holding)
 {
+  if (FDMExec->GetTrimStatus()) return true;
   if (FGModel::Run(Holding)) return true;
+  if (Holding) return false;
+  if (!enabled) return true;
 
   vector<FGOutputType*>::iterator it;
   for (it = OutputTypes.begin(); it != OutputTypes.end(); ++it)
-    (*it)->Run(Holding);
+    (*it)->Run();
 
   return false;
 }
@@ -129,24 +134,6 @@ void FGOutput::SetStartNewOutput(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGOutput::Enable(void)
-{
-  vector<FGOutputType*>::iterator it;
-  for (it = OutputTypes.begin(); it != OutputTypes.end(); ++it)
-    (*it)->Enable();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGOutput::Disable(void)
-{
-  vector<FGOutputType*>::iterator it;
-  for (it = OutputTypes.begin(); it != OutputTypes.end(); ++it)
-    (*it)->Disable();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 bool FGOutput::Toggle(int idx)
 {
   if (idx >= (int)0 && idx < (int)OutputTypes.size())
@@ -157,11 +144,11 @@ bool FGOutput::Toggle(int idx)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGOutput::SetRate(double rate)
+void FGOutput::SetRateHz(double rate)
 {
   vector<FGOutputType*>::iterator it;
   for (it = OutputTypes.begin(); it != OutputTypes.end(); ++it)
-    (*it)->SetRate(rate);
+    (*it)->SetRateHz(rate);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -213,7 +200,7 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
                     std::string port, std::string name, double outRate,
                     std::vector<FGPropertyNode_ptr> & outputProperties)
 {
-  unsigned int idx = OutputTypes.size();
+  size_t idx = OutputTypes.size();
   FGOutputType* Output = 0;
 
   if (debug_lvl > 0) cout << endl << "  Output data set: " << idx << endl;
@@ -234,6 +221,9 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
     name += ":" + port + "/" + protocol;
+  } else if (type == "QTJSBSIM") {
+    Output = new FGUDPOutputSocket(FDMExec);
+    name += ":" + port + "/" + protocol;
   } else if (type == "TERMINAL") {
     // Not done yet
   } else if (type != string("NONE")) {
@@ -244,7 +234,7 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
 
   Output->SetIdx(idx);
   Output->SetOutputName(name);
-  Output->SetRate(outRate);
+  Output->SetRateHz(outRate);
   Output->SetSubSystems(subSystems);
   Output->SetOutputProperties(outputProperties);
 
@@ -270,7 +260,7 @@ bool FGOutput::Load(Element* el)
 
   FGModel::PreLoad(element, PropertyManager);
 
-  unsigned int idx = OutputTypes.size();
+  size_t idx = OutputTypes.size();
   string type = element->GetAttributeValue("type");
   FGOutputType* Output = 0;
 
@@ -286,6 +276,8 @@ bool FGOutput::Load(Element* el)
     Output = new FGOutputSocket(FDMExec);
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
+  } else if (type == "QTJSBSIM") {
+    Output = new FGUDPOutputSocket(FDMExec);
   } else if (type == "TERMINAL") {
     // Not done yet
   } else if (type != string("NONE")) {

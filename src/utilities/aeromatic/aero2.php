@@ -1,6 +1,6 @@
 <?php
 
-$version = 0.95;
+$version = 0.96;
 
 //****************************************************
 //                                                   *
@@ -22,6 +22,7 @@ $version = 0.95;
 // Updated: 11 Apr 2009, DPC - use "0|1" for gear retractability
 // Updated: 21 Jul 2011, DPC - fix rudder travel limit bug
 // Updated:  2 Nov 2011, RKJ - better fuel estimates, payload pointmass
+// Updated  29 Sep 2015, EMH - add a taildragger with a castered tailwheel
 
 
 //***** GET DATA FROM USER ***************************
@@ -35,6 +36,7 @@ $ac_wingincidence   = $_POST['ac_wingincidence'];
 $ac_length          = $_POST['ac_length'];
 $ac_wingarea        = $_POST['ac_wingarea'];
 $ac_geartype        = $_POST['ac_geartype'];
+$ac_castering       = $_POST['ac_castering'];
 $ac_gearretract     = $_POST['ac_gearretract'];
 $ac_numengines      = $_POST['ac_numengines'];
 $ac_enginetype      = $_POST['ac_enginetype'];
@@ -188,16 +190,16 @@ if ($ac_vtailarm == 0) {
 // estimate empty weight, based on max weight
 if ($ac_emptyweight == 0) {
   switch($ac_type) {
-    case 0:  $ac_emptyweight = $ac_weight * .84;
-    case 1:  $ac_emptyweight = $ac_weight * .62;
-    case 2:  $ac_emptyweight = $ac_weight * .61;
-    case 3:  $ac_emptyweight = $ac_weight * .61;
-    case 4:  $ac_emptyweight = $ac_weight * .53;
-    case 5:  $ac_emptyweight = $ac_weight * .50;
-    case 6:  $ac_emptyweight = $ac_weight * .55;
-    case 7:  $ac_emptyweight = $ac_weight * .52;
-    case 8:  $ac_emptyweight = $ac_weight * .49;
-    case 9:  $ac_emptyweight = $ac_weight * .60;
+    case 0:  $ac_emptyweight = $ac_weight * .84; break;
+    case 1:  $ac_emptyweight = $ac_weight * .62; break;
+    case 2:  $ac_emptyweight = $ac_weight * .61; break;
+    case 3:  $ac_emptyweight = $ac_weight * .61; break;
+    case 4:  $ac_emptyweight = $ac_weight * .53; break;
+    case 5:  $ac_emptyweight = $ac_weight * .50; break;
+    case 6:  $ac_emptyweight = $ac_weight * .55; break;
+    case 7:  $ac_emptyweight = $ac_weight * .52; break;
+    case 8:  $ac_emptyweight = $ac_weight * .49; break;
+    case 9:  $ac_emptyweight = $ac_weight * .60; break;
     }
   }
   
@@ -331,8 +333,8 @@ $ac_gearspring_nose = $ac_weight * 0.3;
 $ac_gearspring_tail = $ac_weight * 1.0;
 
 $ac_geardamp_main = $ac_weight * 0.5;
-$ac_geardamp_nose = $ac_weight * 0.5;
-$ac_geardamp_tail = $ac_weight * 0.8;
+$ac_geardamp_nose = $ac_weight * 0.15;
+$ac_geardamp_tail = $ac_weight * 0.5;
 
 $ac_geardynamic = 0.5;
 $ac_gearstatic  = 0.8;
@@ -341,10 +343,11 @@ $ac_gearrolling = 0.02;
 $ac_bearingrolling = 0.003;	// 2 x 0.0015, friction for a ball-bearing
 if($ac_type == 0) $ac_gearrolling = 0.5;  // glider
 
-$ac_gearsteerable_nose = 'STEERABLE';
-$ac_gearsteerable_main = 'FIXED';
-$ac_gearsteerable_tail = 'CASTERED';
-$ac_gearmaxsteer = 5;
+if ($ac_castering != 1)
+  $ac_gearmaxsteer = 5;
+else
+  $ac_gearmaxsteer = 360;
+
 if($ac_gearretract == 0)
   $ac_retract = '0';
 else
@@ -805,7 +808,7 @@ print("   xsi:noNamespaceSchemaLocation=\"http://jsbsim.sourceforge.net/JSBSim.x
 print(" <fileheader>\n");
 print("  <author> Aeromatic v $version </author>\n");
 print("  <filecreationdate>$date_string</filecreationdate>\n");
-print("  <version>\$Revision: 1.15 $</version>\n");
+print("  <version>\$Revision: 1.20 $</version>\n");
 print("  <description> Models a $ac_name. </description>\n");
 print(" </fileheader>\n\n");
  
@@ -835,6 +838,7 @@ switch($ac_geartype) {
   case 0: print("    gear type:     tricycle\n"); break;
   case 1: print("    gear type:     taildragger\n"); break; 
 }
+print("    castering:     $ac_castering\n");
 switch($ac_gearretract) {
   case 0: print("    retractable?:  no\n"); break;
   case 1: print("    retractable?:  yes\n"); break; 
@@ -979,7 +983,7 @@ if($ac_type == 0) {  // if this is a glider
   print("  <contact type=\"STRUCTURE\" name=\"LEFT_WING\">\n");
   print("    <location unit=\"IN\">\n");
   printf("     <x> %6.2f </x>\n", $ac_cglocx);
-  printf("     <y> %6.2f </y>\n", -$ac_halfspan);
+  printf("     <y> %6.2f </y>\n", -$ac_halfspan * $ft_to_in);
   printf("     <z> %6.2f </z>\n", $ac_cglocz);
   print("   </location>\n");
   printf("   <static_friction>  %2.2f </static_friction>\n", 1.0);
@@ -991,7 +995,7 @@ if($ac_type == 0) {  // if this is a glider
   print("  <contact type=\"STRUCTURE\" name=\"RIGHT_WING\">\n");
   print("    <location unit=\"IN\">\n");
   printf("     <x> %6.2f </x>\n", $ac_cglocx);
-  printf("     <y> %6.2f </y>\n", $ac_halfspan);
+  printf("     <y> %6.2f </y>\n", $ac_halfspan * $ft_to_in);
   printf("     <z> %6.2f </z>\n", $ac_cglocz);
   print("   </location>\n");
   printf("   <static_friction>  %2.2f </static_friction>\n", 1.0);

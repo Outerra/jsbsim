@@ -45,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.49 2014/12/27 14:37:37 dpculp Exp $");
+IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.57 2016/01/02 17:42:53 bcoconni Exp $");
 IDENT(IdHdr,ID_PROPELLER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +60,6 @@ CLASS IMPLEMENTATION
 FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
                        : FGThruster(exec, prop_element, num)
 {
-  string token;
   Element *table_element, *local_element;
   string name="";
   FGPropertyManager* PropertyManager = exec->GetPropertyManager();
@@ -78,13 +77,19 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   Vinduced = 0.0;
 
   if (prop_element->FindElement("ixx"))
-    Ixx = prop_element->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2");
+    Ixx = max(prop_element->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2"), 0.001);
+
+  Sense_multiplier = 1.0;
+  if (prop_element->HasAttribute("version"))
+    if  (prop_element->GetAttributeValueAsNumber("version") > 1.0)
+      Sense_multiplier = -1.0;
+
   if (prop_element->FindElement("diameter"))
-    Diameter = prop_element->FindElementValueAsNumberConvertTo("diameter", "FT");
+    Diameter = max(prop_element->FindElementValueAsNumberConvertTo("diameter", "FT"), 0.001);
   if (prop_element->FindElement("numblades"))
     numBlades = (int)prop_element->FindElementValueAsNumber("numblades");
   if (prop_element->FindElement("gearratio"))
-    GearRatio = prop_element->FindElementValueAsNumber("gearratio");
+    GearRatio = max(prop_element->FindElementValueAsNumber("gearratio"), 0.001);
   if (prop_element->FindElement("minpitch"))
     MinPitch = prop_element->FindElementValueAsNumber("minpitch");
   if (prop_element->FindElement("maxpitch"))
@@ -113,7 +118,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
       } else {
         cerr << "Unknown table type: " << name << " in propeller definition." << endl;
       }
-    } catch (std::string str) {
+    } catch (std::string& str) {
       throw("Error loading propeller table:" + name + ". " + str);
     }
   }
@@ -197,7 +202,7 @@ double FGPropeller::Calculate(double EnginePower)
   FGColumnVector3 localAeroVel = Transform().Transposed() * in.AeroUVW;
   double omega, PowerAvailable;
 
-  double Vel = localAeroVel(eU);
+  double Vel = localAeroVel(eU) + Vinduced;
   double rho = in.Density;
   double RPS = RPM/60.0;
 
@@ -273,14 +278,14 @@ double FGPropeller::Calculate(double EnginePower)
   // natural axis of the engine. The transform takes place in the base class
   // FGForce::GetBodyForces() function.
 
-  vH(eX) = Ixx*omega*Sense;
+  vH(eX) = Ixx*omega*Sense*Sense_multiplier;
   vH(eY) = 0.0;
   vH(eZ) = 0.0;
 
   if (omega > 0.0) ExcessTorque = PowerAvailable / omega;
   else             ExcessTorque = PowerAvailable / 1.0;
 
-  RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
+  RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * in.TotalDeltaT) * 60.0;
 
   if (RPM < 0.0) RPM = 0.0; // Engine won't turn backwards
 
@@ -297,7 +302,7 @@ double FGPropeller::GetPowerRequired(void)
 {
   double cPReq, J;
   double rho = in.Density;
-  double Vel = in.AeroUVW(eU);
+  double Vel = in.AeroUVW(eU) + Vinduced;
   double RPS = RPM / 60.0;
 
   if (RPS != 0.0) J = Vel / (Diameter * RPS);
@@ -321,7 +326,7 @@ double FGPropeller::GetPowerRequired(void)
           double dRPM = rpmReq - RPM;
           // The pitch of a variable propeller cannot be changed when the RPMs are
           // too low - the oil pump does not work.
-          if (RPM > 200) Pitch -= dRPM * deltaT;
+          if (RPM > 200) Pitch -= dRPM * in.TotalDeltaT;
           if (Pitch < MinPitch)       Pitch = MinPitch;
           else if (Pitch > MaxPitch)  Pitch = MaxPitch;
 

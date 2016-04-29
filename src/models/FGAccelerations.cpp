@@ -60,7 +60,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAccelerations.cpp,v 1.20 2015/01/02 22:43:13 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGAccelerations.cpp,v 1.25 2015/12/09 04:28:18 jberndt Exp $");
 IDENT(IdHdr,ID_ACCELERATIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,6 +157,7 @@ void FGAccelerations::CalculatePQRdot(void)
   // Compute body frame rotational accelerations based on the current body
   // moments and the total inertial angular velocity expressed in the body
   // frame.
+//  if (HoldDown && !FDMExec->GetTrimStatus()) {
   if (HoldDown) {
     // The rotational acceleration in ECI is calculated so that the rotational
     // acceleration is zero in the body frame.
@@ -201,7 +202,7 @@ void FGAccelerations::CalculateQuatdot(void)
 
 void FGAccelerations::CalculateUVWdot(void)
 {
-  if (HoldDown)
+  if (HoldDown && !FDMExec->GetTrimStatus())
     vBodyAccel.InitMatrix();
   else
     vBodyAccel = in.Force / in.Mass;
@@ -255,7 +256,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   const FGMatrix33& Jinv = in.Jinv;
   FGColumnVector3 vdot, wdot;
   vector<LagrangeMultiplier*>& multipliers = *in.MultipliersList;
-  int n = multipliers.size();
+  size_t n = multipliers.size();
 
   vFrictionForces.InitMatrix();
   vFrictionMoments.InitMatrix();
@@ -263,21 +264,17 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   // If no gears are in contact with the ground then return
   if (!n) return;
 
-  // Account for the last CG update from FGMassBalance
-  for (int i=0; i < n; i++)
-    multipliers[i]->MomentJacobian += in.DeltaXYZcg * multipliers[i]->ForceJacobian;
-
   vector<double> a(n*n); // Will contain Jac*M^-1*Jac^T
   vector<double> rhs(n);
 
   // Assemble the linear system of equations
-  for (int i=0; i < n; i++) {
+  for (unsigned int i=0; i < n; i++) {
     FGColumnVector3 v1 = invMass * multipliers[i]->ForceJacobian;
     FGColumnVector3 v2 = Jinv * multipliers[i]->MomentJacobian; // Should be J^-T but J is symmetric and so is J^-1
 
-    for (int j=0; j < i; j++)
+    for (unsigned int j=0; j < i; j++)
       a[i*n+j] = a[j*n+i]; // Takes advantage of the symmetry of Jac^T*M^-1*Jac
-    for (int j=i; j < n; j++)
+    for (unsigned int j=i; j < n; j++)
       a[i*n+j] = DotProduct(v1, multipliers[j]->ForceJacobian)
                + DotProduct(v2, multipliers[j]->MomentJacobian);
   }
@@ -298,12 +295,12 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   // 1. Compute the right hand side member 'rhs'
   // 2. Divide every line of 'a' and 'rhs' by a[i,i]. This is in order to save
   //    a division computation at each iteration of Gauss-Seidel.
-  for (int i=0; i < n; i++) {
+  for (unsigned int i=0; i < n; i++) {
     double d = 1.0 / a[i*n+i];
 
     rhs[i] = -(DotProduct(multipliers[i]->ForceJacobian, vdot)
               +DotProduct(multipliers[i]->MomentJacobian, wdot))*d;
-    for (int j=0; j < n; j++)
+    for (unsigned int j=0; j < n; j++)
       a[i*n+j] *= d;
   }
 
@@ -311,11 +308,11 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   for (int iter=0; iter < 50; iter++) {
     double norm = 0.;
 
-    for (int i=0; i < n; i++) {
+    for (unsigned int i=0; i < n; i++) {
       double lambda0 = multipliers[i]->value;
       double dlambda = rhs[i];
 
-      for (int j=0; j < n; j++)
+      for (unsigned int j=0; j < n; j++)
         dlambda -= a[i*n+j]*multipliers[j]->value;
 
       multipliers[i]->value = Constrain(multipliers[i]->Min, lambda0+dlambda, multipliers[i]->Max);
@@ -329,7 +326,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
 
   // Calculate the total friction forces and moments
 
-  for (int i=0; i< n; i++) {
+  for (unsigned int i=0; i< n; i++) {
     double lambda = multipliers[i]->value;
     vFrictionForces += lambda * multipliers[i]->ForceJacobian;
     vFrictionMoments += lambda * multipliers[i]->MomentJacobian;

@@ -59,7 +59,7 @@ using std::max;
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $"
+#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.45 2016/01/10 12:07:49 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -75,7 +75,7 @@ CLASS DOCUMENTATION
 *   This class provides universal constants, utility functions, messaging
 *   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
-    @version $Id: FGJSBBase.h,v 1.41 2014/09/03 17:35:04 bcoconni Exp $
+    @version $Id: FGJSBBase.h,v 1.45 2016/01/10 12:07:49 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,7 +177,7 @@ public:
   void PutMessage(const std::string& text, double dVal);
   /** Reads the message on the queue (but does not delete it).
       @return 1 if some messages */
-  int SomeMessages(void);
+  int SomeMessages(void) { return !Messages.empty(); }
   /** Reads the message on the queue and removes it from the queue.
       This function also prints out the message.*/
   void ProcessMessage(void);
@@ -266,6 +266,15 @@ public:
     return measure*0.3048;
   }
 
+  /** Compute the total pressure in front of the Pitot tube. It uses the
+  *   Rayleigh formula for supersonic speeds (See "Introduction to Aerodynamics
+  *   of a Compressible Fluid - H.W. Liepmann, A.E. Puckett - Wiley & sons
+  *   (1947)" §5.4 pp 75-80)
+  *   @param mach  The Mach number
+  *   @param p     Pressure in psf
+  *   @return The total pressure in front of the Pitot tube in psf */
+  static double PitotTotalPressure(double mach, double p);
+
   /** Calculate the calibrated airspeed from the Mach number. It uses the
   *   Rayleigh formula for supersonic speeds (See "Introduction to Aerodynamics
   *   of a Compressible Fluid - H.W. Liepmann, A.E. Puckett - Wiley & sons
@@ -295,7 +304,7 @@ public:
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(double a, double b) {
     double eps = 2.0*DBL_EPSILON;
-    return std::fabs(a - b) <= eps * max(std::fabs(a), std::fabs(b));
+    return std::fabs(a - b) <= eps * std::max<double>(std::fabs(a), std::fabs(b));
   }
 
   /** Finite precision comparison.
@@ -304,7 +313,7 @@ public:
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(float a, float b) {
     float eps = 2.0*FLT_EPSILON;
-    return std::fabs(a - b) <= eps * max(std::fabs(a), std::fabs(b));
+    return std::fabs(a - b) <= eps * std::max<double>(std::fabs(a), std::fabs(b));
   }
 
   /** Finite precision comparison.

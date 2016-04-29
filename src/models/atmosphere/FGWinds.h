@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_WINDS "$Id: FGWinds.h,v 1.10 2014/02/17 05:02:38 jberndt Exp $"
+#define ID_WINDS "$Id: FGWinds.h,v 1.11 2015/02/27 20:36:47 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -321,7 +321,7 @@ public:
 private:
 
   double MagnitudedAccelDt, MagnitudeAccel, Magnitude, TurbDirection;
-  double h;
+  //double h;
   double TurbGain;
   double TurbRate;
   double Rhythmicity;

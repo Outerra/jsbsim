@@ -54,7 +54,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.93 2014/11/30 13:06:05 bcoconni Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.104 2015/12/13 07:54:48 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -178,7 +178,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.93 $
+    @version $Revision: 1.104 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -224,21 +224,28 @@ public:
   /// Default destructor
   ~FGFDMExec();
 
-  // This list of enums is very important! The order in which models are listed here
-  // determines the order of execution of the models.
+  // This list of enums is very important! The order in which models are listed
+  // here determines the order of execution of the models.
+  //
+  // There are some conditions that need to be met :
+  // 1. FCS can request mass geometry changes via the inertia/pointmass-*
+  //    properties so it must be executed before MassBalance
+  // 2. MassBalance must be executed before Propulsion, Aerodynamics,
+  //    GroundReactions, ExternalReactions and BuoyantForces to ensure that
+  //    their moments are computed with the updated CG position.
   enum eModels { ePropagate=0,
                  eInput,
                  eInertial,
                  eAtmosphere,
                  eWinds,
-                 eAuxiliary,
                  eSystems,
+                 eMassBalance,
+                 eAuxiliary,
                  ePropulsion,
                  eAerodynamics,
                  eGroundReactions,
                  eExternalReactions,
                  eBuoyantForces,
-                 eMassBalance,
                  eAircraft,
                  eAccelerations,
                  eOutput,
@@ -246,19 +253,6 @@ public:
 
   /** Unbind all tied JSBSim properties. */
   void Unbind(void) {instance->Unbind();}
-
-  /** This routine places a model into the runlist at the specified rate. The
-      "rate" is not really a clock rate. It represents how many calls to the
-      FGFDMExec::Run() method must be made before the model is executed. A
-      value of 1 means that the model will be executed for each call to the
-      exec's Run() method. A value of 5 means that the model will only be
-      executed every 5th call to the exec's Run() method. Use of a rate other than
-      one is at this time not recommended.
-      @param model A pointer to the model being scheduled.
-      @param rate The rate at which to execute the model as described above.
-                  Default is every frame (rate=1).
-      @return Currently returns 0 always. */
-  void Schedule(FGModel* model, int rate=1);
 
   /** This function executes each scheduled model in succession.
       @return true if successful, false if sim should be ended  */
@@ -320,7 +314,7 @@ public:
                       is not given in either place, an error will result.
       @return true if successfully loads; false otherwise. */
   bool LoadScript(const std::string& Script, double deltaT=0.0,
-                  const std::string initfile="");
+                  const std::string& initfile="");
 
   /** Sets the path to the engine config file directories.
       @param path path to the directory under which engine config
@@ -370,6 +364,8 @@ public:
   FGAuxiliary* GetAuxiliary(void)      {return (FGAuxiliary*)Models[eAuxiliary];}
   /// Returns the FGInput pointer.
   FGInput* GetInput(void)              {return (FGInput*)Models[eInput];}
+  /// Returns the FGOutput pointer.
+  FGOutput* GetOutput(void)            {return (FGOutput*)Models[eOutput];}
   /** Get a pointer to the ground callback currently used. It is recommanded
       to store the returned pointer in a 'smart pointer' FGGroundCallback_ptr.
       @return A pointer to the current ground callback object.
@@ -441,8 +437,8 @@ public:
   /** Forces the specified output object to print its items once */
   void ForceOutput(int idx=0) { Output->ForceOutput(idx); }
 
-  /** Sets the logging rate for all output objects (if any). */
-  void SetLoggingRate(double rate) { Output->SetRate(rate); }
+  /** Sets the logging rate in Hz for all output objects (if any). */
+  void SetLoggingRate(double rate) { Output->SetRateHz(rate); }
 
   /** Sets (or overrides) the output filename
       @param n index of file
@@ -466,12 +462,6 @@ public:
   * - tTurn
   * - tNone  */
   void DoTrim(int mode);
-  void DoSimplexTrim(int mode);
-
-  /** Executes linearization with state-space output
-   * You must trim first to get an accurate state-space model
-   */
-  void DoLinearization(int mode);
 
   /// Disables data logging to all outputs.
   void DisableOutput(void) { Output->Disable(); }
@@ -573,11 +563,16 @@ public:
       is also incremented.
       @return the new simulation time.     */
   double IncrTime(void) {
-    if (!holding) sim_time += dT;
-    GetGroundCallback()->SetTime(sim_time);
-    Frame++;
+    if (!holding && !IntegrationSuspended()) {
+      sim_time += dT;
+      GetGroundCallback()->SetTime(sim_time);
+      Frame++;
+    }
     return sim_time;
   }
+
+  /** Retrieves the current frame count. */
+  unsigned int GetFrame(void) const {return Frame;}
 
   /** Retrieves the current debug level setting. */
   int GetDebugLevel(void) const {return debug_lvl;};
@@ -598,6 +593,7 @@ private:
   bool holding;
   bool IncrementThenHolding;
   int TimeStepsUntilHold;
+  int RandomSeed;
   bool Constructing;
   bool modelLoaded;
   bool IsChild;
@@ -630,6 +626,7 @@ private:
   bool trim_status;
   int ta_mode;
   unsigned int ResetMode;
+  int trim_completed;
 
   FGScript*           Script;
   FGInitialCondition* IC;
@@ -650,6 +647,7 @@ private:
   bool ReadChild(Element*);
   bool ReadPrologue(Element*);
   void SRand(int sr);
+  int  SRand(void) const {return RandomSeed;}
   void LoadInputs(unsigned int idx);
   void LoadPlanetConstants(void);
   void LoadModelConstants(void);

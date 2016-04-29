@@ -44,29 +44,21 @@ you have chosen your IC's wisely) even after setting it up with this class.
 INCLUDES
 *******************************************************************************/
 
-#include <iostream>
-#include <fstream>
 #include <cstdlib>
 
 #include "FGInitialCondition.h"
 #include "FGFDMExec.h"
-#include "math/FGQuaternion.h"
 #include "models/FGInertial.h"
 #include "models/FGAtmosphere.h"
-#include "models/FGPropagate.h"
-#include "models/FGPropulsion.h"
+#include "models/FGAircraft.h"
 #include "models/FGAccelerations.h"
-#include "models/FGFCS.h"
-#include "input_output/FGPropertyManager.h"
-#include "input_output/string_utilities.h"
 #include "input_output/FGXMLFileRead.h"
-#include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.98 2014/11/30 12:35:32 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.106 2016/01/22 03:28:12 jberndt Exp $");
 IDENT(IdHdr,ID_INITIALCONDITION);
 
 //******************************************************************************
@@ -77,6 +69,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) : fdmex(FDMExec)
 
   if(FDMExec != NULL ) {
     Atmosphere=fdmex->GetAtmosphere();
+    Aircraft=fdmex->GetAircraft();
   } else {
     cout << "FGInitialCondition: This class requires a pointer to a valid FGFDMExec object" << endl;
   }
@@ -151,6 +144,7 @@ void FGInitialCondition::InitializeIC(void)
   lastSpeedSet = setvt;
   lastAltitudeSet = setasl;
   enginesRunning = 0;
+  needTrim = 0;
 }
 
 //******************************************************************************
@@ -169,8 +163,7 @@ void FGInitialCondition::SetVequivalentKtsIC(double ve)
 void FGInitialCondition::SetMachIC(double mach)
 {
   double altitudeASL = position.GetAltitudeASL();
-  double temperature = Atmosphere->GetTemperature(altitudeASL);
-  double soundSpeed = sqrt(SHRatio*Reng*temperature);
+  double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   SetVtrueFpsIC(mach*soundSpeed);
   lastSpeedSet = setmach;
 }
@@ -184,10 +177,10 @@ void FGInitialCondition::SetVcalibratedKtsIC(double vcas)
   double pressureSL = Atmosphere->GetPressureSL();
   double rhoSL = Atmosphere->GetDensitySL();
   double mach = MachFromVcalibrated(fabs(vcas)*ktstofps, pressure, pressureSL, rhoSL);
-  double temperature = Atmosphere->GetTemperature(altitudeASL);
-  double soundSpeed = sqrt(SHRatio*Reng*temperature);
+  double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
+  double PitotAngle = Aircraft->GetPitotAngle();
 
-  SetVtrueFpsIC(mach*soundSpeed);
+  SetVtrueFpsIC(mach * soundSpeed / (cos(alpha+PitotAngle) * cos(beta)));
   lastSpeedSet = setvc;
 }
 
@@ -214,8 +207,8 @@ void FGInitialCondition::calcAeroAngles(const FGColumnVector3& _vt_NED)
     alpha = atan2( wa, ua );
 
   // alpha cannot be constrained without updating other informations like the
-  // true speed or the Euler angles. Otherwise we might end up with an inconsistent
-  // state of the aircraft.
+  // true speed or the Euler angles. Otherwise we might end up with an
+  // inconsistent state of the aircraft.
   /*alpha = Constrain(fdmex->GetAerodynamics()->GetAlphaCLMin(), alpha,
                     fdmex->GetAerodynamics()->GetAlphaCLMax());*/
 
@@ -694,10 +687,9 @@ void FGInitialCondition::SetAltitudeAGLFtIC(double agl)
 void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 {
   double altitudeASL = position.GetAltitudeASL();
-  double temperature = Atmosphere->GetTemperature(altitudeASL);
   double pressure = Atmosphere->GetPressure(altitudeASL);
   double pressureSL = Atmosphere->GetPressureSL();
-  double soundSpeed = sqrt(SHRatio*Reng*temperature);
+  double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   double rho = Atmosphere->GetDensity(altitudeASL);
   double rhoSL = Atmosphere->GetDensitySL();
 
@@ -708,8 +700,7 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
   altitudeASL=alt;
   position.SetAltitudeASL(alt);
 
-  temperature = Atmosphere->GetTemperature(altitudeASL);
-  soundSpeed = sqrt(SHRatio*Reng*temperature);
+  soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   rho = Atmosphere->GetDensity(altitudeASL);
   pressure = Atmosphere->GetPressure(altitudeASL);
 
@@ -821,12 +812,13 @@ double FGInitialCondition::GetBodyWindFpsIC(int idx) const
 double FGInitialCondition::GetVcalibratedKtsIC(void) const
 {
   double altitudeASL = position.GetAltitudeASL();
-  double temperature = Atmosphere->GetTemperature(altitudeASL);
   double pressure = Atmosphere->GetPressure(altitudeASL);
   double pressureSL = Atmosphere->GetPressureSL();
   double rhoSL = Atmosphere->GetDensitySL();
-  double soundSpeed = sqrt(SHRatio*Reng*temperature);
-  double mach = vt / soundSpeed;
+  double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
+  double PitotAngle = Aircraft->GetPitotAngle();
+  double mach = vt * cos(alpha+PitotAngle) * cos(beta) / soundSpeed;
+
   return fpstokts * VcalibratedFromMach(mach, pressure, pressureSL, rhoSL);
 }
 
@@ -845,8 +837,7 @@ double FGInitialCondition::GetVequivalentKtsIC(void) const
 double FGInitialCondition::GetMachIC(void) const
 {
   double altitudeASL = position.GetAltitudeASL();
-  double temperature = Atmosphere->GetTemperature(altitudeASL);
-  double soundSpeed = sqrt(SHRatio*Reng*temperature);
+  double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   return vt / soundSpeed;
 }
 
@@ -905,7 +896,7 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   // Check to see if any engines are specified to be initialized in a running state
   Element* running_elements = document->FindElement("running");
   while (running_elements) {
-    enginesRunning &= 1 << int(running_elements->GetDataAsNumber());
+    enginesRunning |= 1 << int(running_elements->GetDataAsNumber());
     running_elements = document->FindNextElement("running");
   }
 
@@ -918,15 +909,6 @@ bool FGInitialCondition::Load_v1(Element* document)
 {
   bool result = true;
 
-  if (document->FindElement("latitude")) {
-    double latitude = document->FindElementValueAsNumberConvertTo("latitude", "RAD");
-    string lat_type = document->FindElement("latitude")->GetAttributeValue("type");
-    if (lat_type == "geod" || lat_type == "geodetic")
-      position.SetPositionGeodetic(0.0, latitude, 0.0); // Longitude and altitude will be set later on
-    else
-      position.SetLatitude(latitude);
-  }
-
   if (document->FindElement("longitude"))
     SetLongitudeRadIC(document->FindElementValueAsNumberConvertTo("longitude", "RAD"));
   if (document->FindElement("elevation"))
@@ -938,6 +920,32 @@ bool FGInitialCondition::Load_v1(Element* document)
     SetAltitudeAGLFtIC(document->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
   else if (document->FindElement("altitudeMSL")) // This is feet above sea level
     SetAltitudeASLFtIC(document->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
+
+  double altitude = GetAltitudeASLFtIC();
+  double longitude = GetLongitudeRadIC();
+
+  Element* latitude_el = document->FindElement("latitude");
+  if (latitude_el) {
+    double latitude = document->FindElementValueAsNumberConvertTo("latitude", "RAD");
+    if (fabs(latitude) > 0.5*M_PI) {
+      string unit_type = latitude_el->GetAttributeValue("unit");
+      if (unit_type.empty()) unit_type="RAD";
+      cerr << latitude_el->ReadFrom() << "The latitude value "
+           << latitude_el->GetDataAsNumber() << " " << unit_type
+           << " is outside the range [";
+      if (unit_type == "DEG")
+        cerr << "-90 DEG ; +90 DEG]" << endl;
+      else
+        cerr << "-PI/2 RAD; +PI/2 RAD]" << endl;
+      result = false;
+    }
+
+    string lat_type = latitude_el->GetAttributeValue("type");
+    if (lat_type == "geod" || lat_type == "geodetic")
+      position.SetPositionGeodetic(longitude, latitude, altitude); // Longitude and altitude will be set later on
+    else
+      position.SetLatitude(latitude);
+  }
 
   FGColumnVector3 vOrient = orientation.GetEuler();
 
@@ -990,6 +998,8 @@ bool FGInitialCondition::Load_v1(Element* document)
   {
     SetTargetNlfIC(document->FindElementValueAsNumber("targetNlf"));
   }
+  if (document->FindElement("trim"))
+    needTrim = document->FindElementValueAsNumber("trim");
 
   // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
   // This is the rotation rate of the "Local" frame, expressed in the local frame.
@@ -1040,15 +1050,6 @@ bool FGInitialCondition::Load_v2(Element* document)
     } else if (frame == "ecef") {
       if (!position_el->FindElement("x") && !position_el->FindElement("y") && !position_el->FindElement("z")) {
         Element* latitude_el = position_el->FindElement("latitude");
-        if (latitude_el) {
-          string lat_type = latitude_el->GetAttributeValue("type");
-          double latitude = position_el->FindElementValueAsNumberConvertTo("latitude", "RAD");
-          if (lat_type == "geod" || lat_type == "geodetic")
-            position.SetPositionGeodetic(0.0, latitude, 0.0); // Longitude and altitude will be set later on
-          else
-            position.SetLatitude(latitude);
-        }
-
         if (position_el->FindElement("longitude"))
           position.SetLongitude(position_el->FindElementValueAsNumberConvertTo("longitude", "RAD"));
 
@@ -1061,6 +1062,18 @@ bool FGInitialCondition::Load_v2(Element* document)
         } else {
           cerr << endl << "  No altitude or radius initial condition is given." << endl;
           result = false;
+        }
+
+        double altitude = position.GetAltitudeASL();
+        double longitude = position.GetLongitude();
+
+        if (latitude_el) {
+          string lat_type = latitude_el->GetAttributeValue("type");
+          double latitude = position_el->FindElementValueAsNumberConvertTo("latitude", "RAD");
+          if (lat_type == "geod" || lat_type == "geodetic")
+            position.SetPositionGeodetic(longitude, latitude, altitude);
+          else
+            position.SetLatitude(latitude);
         }
 
       } else {

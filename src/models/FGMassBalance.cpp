@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGMassBalance.cpp,v 1.51 2014/11/29 13:47:19 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGMassBalance.cpp,v 1.54 2015/12/09 04:28:18 jberndt Exp $");
 IDENT(IdHdr,ID_MASSBALANCE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -337,9 +337,8 @@ const FGColumnVector3& FGMassBalance::GetPointMassMoment(void)
 
 const FGMatrix33& FGMassBalance::CalculatePMInertias(void)
 {
-  unsigned int size;
+  size_t size = PointMasses.size();
 
-  size = PointMasses.size();
   if (size == 0) return pmJ;
 
   pmJ = FGMatrix33();
@@ -403,14 +402,16 @@ void FGMassBalance::bind(void)
   PropertyManager->Tie("inertia/cg-z-in", this,3,
                        (PMF)&FGMassBalance::GetXYZcg);
   typedef int (FGMassBalance::*iOPV)() const;
-  PropertyManager->Tie("inertia/print-mass-properties", this, (iOPV)0, &FGMassBalance::GetMassPropertiesReport);
+  PropertyManager->Tie("inertia/print-mass-properties", this, (iOPV)0,
+                       &FGMassBalance::GetMassPropertiesReport, false);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //
 // This function binds properties for each pointmass object created.
 //
-void FGMassBalance::PointMass::bind(FGPropertyManager* PropertyManager, int num) {
+void FGMassBalance::PointMass::bind(FGPropertyManager* PropertyManager,
+                                    unsigned int num) {
   string tmp = CreateIndexedPropertyName("inertia/pointmass-weight-lbs", num);
   PropertyManager->Tie( tmp.c_str(), this, &PointMass::GetPointMassWeight,
                                        &PointMass::SetPointMassWeight);
@@ -434,12 +435,14 @@ void FGMassBalance::GetMassPropertiesReport(int i)
        << "  Mass Properties Report (English units: lbf, in, slug-ft^2)"
        << reset << endl;
   cout << "                                  " << underon << "    Weight    CG-X    CG-Y"
-       << "    CG-Z         Ixx         Iyy         Izz" << underoff << endl;
+       << "    CG-Z         Ixx         Iyy         Izz" 
+       << "         Ixy         Ixz         Iyz" << underoff << endl;
   cout.precision(1);
   cout << highint << setw(34) << left << "    Base Vehicle " << normint
-       << right << setw(10) << EmptyWeight << setw(8) << vbaseXYZcg(eX) << setw(8)
-       << vbaseXYZcg(eY) << setw(8) << vbaseXYZcg(eZ) << setw(12) << baseJ(1,1)
-       << setw(12) << baseJ(2,2) << setw(12) << baseJ(3,3) << endl;
+       << right << setw(10) << EmptyWeight
+       << setw(8) << vbaseXYZcg(eX) << setw(8) << vbaseXYZcg(eY) << setw(8) << vbaseXYZcg(eZ)
+       << setw(12) << baseJ(1,1) << setw(12) << baseJ(2,2) << setw(12) << baseJ(3,3)
+       << setw(12) << baseJ(1,2) << setw(12) << baseJ(1,3) << setw(12) << baseJ(2,3) << endl;
 
   for (unsigned int i=0;i<PointMasses.size();i++) {
     PointMass* pm = PointMasses[i];
@@ -447,13 +450,13 @@ void FGMassBalance::GetMassPropertiesReport(int i)
     cout << highint << left << setw(4) << i << setw(30) << pm->GetName() << normint
          << right << setw(10) << pmweight << setw(8) << pm->GetLocation()(eX)
          << setw(8) << pm->GetLocation()(eY) << setw(8) << pm->GetLocation()(eZ)
-         << setw(12) << pm->GetPointMassMoI(1,1) << setw(12) << pm->GetPointMassMoI(2,2)
-         << setw(12) << pm->GetPointMassMoI(3,3) << endl;
+         << setw(12) << pm->GetPointMassMoI(1,1) << setw(12) << pm->GetPointMassMoI(2,2) << setw(12) << pm->GetPointMassMoI(3,3)
+         << setw(12) << pm->GetPointMassMoI(1,2) << setw(12) << pm->GetPointMassMoI(1,3) << setw(12) << pm->GetPointMassMoI(2,3) << endl;         
   }
 
   cout << FDMExec->GetPropulsionTankReport();
 
-  cout << underon << setw(104) << " " << underoff << endl;
+  cout << "    " << underon << setw(136) << " " << underoff << endl;
   cout << highint << left << setw(30) << "    Total: " << right << setw(14) << Weight 
        << setw(8) << vXYZcg(eX)
        << setw(8) << vXYZcg(eY)
@@ -461,6 +464,9 @@ void FGMassBalance::GetMassPropertiesReport(int i)
        << setw(12) << mJ(1,1)
        << setw(12) << mJ(2,2)
        << setw(12) << mJ(3,3)
+       << setw(12) << mJ(1,2)
+       << setw(12) << mJ(1,3)
+       << setw(12) << mJ(2,3)
        << normint << endl;
 
   cout.setf(ios_base::fixed);

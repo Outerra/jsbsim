@@ -5,6 +5,7 @@ include(UseCython)
 set_source_files_properties(jsbsim.pyx PROPERTIES CYTHON_IS_CXX TRUE)
 
 # Build the Python module using Cython and the JSBSim library
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 cython_add_module(jsbsim jsbsim.pyx)
 target_link_libraries(jsbsim libJSBSim)
 
@@ -23,7 +24,21 @@ set(PYTHON_TESTS ResetOutputFiles
                  CheckFGBug1503
                  TestGustReset
                  TestPointMassInertia
-                 CheckMomentsUpdate)
+                 CheckMomentsUpdate
+                 TestFuelTanksInertia
+                 TestInputSocket
+                 TestInitialConditions
+                 CheckScripts
+                 CheckAircrafts
+                 CheckOutputRate
+                 TestAccelerometer
+                 CheckDebugLvl
+                 TestCosineGust
+                 TestScriptOutput
+                 CheckSimTimeReset
+                 TestHoldDown
+                 TestPitotAngle
+                 CheckTrim)
 
 foreach(test ${PYTHON_TESTS})
   add_test(${test} ${PYTHON_EXECUTABLE} ${test}.py ${CMAKE_SOURCE_DIR})
