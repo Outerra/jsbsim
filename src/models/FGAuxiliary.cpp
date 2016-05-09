@@ -185,7 +185,7 @@ bool FGAuxiliary::Run(bool Holding)
 
   UpdateWindMatrices();
 
-  Re = Vt * in.Wingchord / in.KinematicViscosity;
+  Re = in.KinematicViscosity != 0.0 ? Vt * in.Wingchord / in.KinematicViscosity : 0.0;
 
   double densityD2 = 0.5*in.Density;
 
