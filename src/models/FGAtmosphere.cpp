@@ -134,7 +134,7 @@ void FGAtmosphere::Calculate(double altitude)
   DensityAltitude = altitude;
 
   Viscosity = Beta * pow(Temperature, 1.5) / (SutherlandConstant + Temperature);
-  KinematicViscosity = Viscosity / Density;
+  KinematicViscosity = Density != 0 ? Viscosity / Density : 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
