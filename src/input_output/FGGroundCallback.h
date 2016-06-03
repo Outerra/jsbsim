@@ -38,8 +38,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "simgear/structure/SGReferenced.hxx"
-#include "simgear/structure/SGSharedPtr.hxx"
+#ifndef NOSIMGEAR
+    #include "simgear/structure/SGReferenced.hxx"
+    #include "simgear/structure/SGSharedPtr.hxx"
+#endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

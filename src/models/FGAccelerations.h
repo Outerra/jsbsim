@@ -44,13 +44,12 @@ INCLUDES
 #include "math/FGColumnVector3.h"
 #include "math/LagrangeMultiplier.h"
 #include "math/FGMatrix33.h"
-#include "math/FGQuaternion.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ACCELERATIONS "$Id: FGAccelerations.h,v 1.17 2015/01/31 14:56:21 bcoconni Exp $"
+#define ID_ACCELERATIONS "$Id: FGAccelerations.h,v 1.20 2016/05/22 10:28:23 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -97,7 +96,7 @@ CLASS DOCUMENTATION
          NASA SP-8024, May 1969
 
     @author Jon S. Berndt, Mathias Froehlich, Bertrand Coconnier
-    @version $Id: FGAccelerations.h,v 1.17 2015/01/31 14:56:21 bcoconni Exp $
+    @version $Id: FGAccelerations.h,v 1.20 2016/05/22 10:28:23 bcoconni Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,17 +133,6 @@ public:
                      "Resume" command to be given.
       @return false if no error */
   bool Run(bool Holding);
-
-  /** Retrieves the time derivative of the body orientation quaternion.
-      Retrieves the time derivative of the body orientation quaternion based on
-      the rate of change of the orientation between the body and the ECI frame.
-      The quaternion returned is represented by an FGQuaternion reference. The
-      quaternion is 1-based, so that the first element can be retrieved using
-      the "()" operator.
-      units rad/sec^2
-      @return The time derivative of the body orientation quaternion.
-  */
-  const FGQuaternion& GetQuaterniondot(void) const {return vQtrndot;}
 
   /** Retrieves the body axis acceleration.
       Retrieves the computed body axis accelerations based on the
@@ -278,6 +266,7 @@ public:
       @return The total moments applied on the body.
    */
   double GetMoments(int idx) const { return in.Moment(idx) + vFrictionMoments(idx); }
+  FGColumnVector3 GetMoments(void) const { return in.Moment + vFrictionMoments; }
 
   /** Retrieves the total forces applied on the body.
       Retrieves the total forces applied on the body. This does include the
@@ -291,6 +280,7 @@ public:
       @return The total forces applied on the body.
    */
   double GetForces(int idx) const { return in.Force(idx) + vFrictionForces(idx); }
+  FGColumnVector3 GetForces(void) const { return in.Force + vFrictionForces; }
 
   /** Retrieves the ground moments applied on the body.
       Retrieves the ground moments applied on the body. This does include the
@@ -304,19 +294,35 @@ public:
       @return The ground moments applied on the body.
    */
   double GetGroundMoments(int idx) const { return in.GroundMoment(idx) + vFrictionMoments(idx); }
+  FGColumnVector3 GetGroundMoments(void) const { return in.GroundMoment + vFrictionMoments; }
 
   /** Retrieves the ground forces applied on the body.
       Retrieves the ground forces applied on the body. This does include the
       ground normal reaction and friction forces.
-      The vector for the total moments in the body frame is organized (Fx, Fy
+      The vector for the ground forces in the body frame is organized (Fx, Fy
       , Fz). The vector is 1-based. In other words, GetGroundForces(1) returns
       Fx. Various convenience enumerators are defined in FGJSBBase. The relevant
       enumerators for the forces returned by this call are, eX=1, eY=2, eZ=3.
-      units lbs
+      units lbs.
       @param idx the index of the forces component desired (1-based).
       @return The ground forces applied on the body.
    */
   double GetGroundForces(int idx) const { return in.GroundForce(idx) + vFrictionForces(idx); }
+  FGColumnVector3 GetGroundForces(void) const { return in.GroundForce + vFrictionForces; }
+
+  /** Retrieves the weight applied on the body.
+      Retrieves the weight applied on the body i.e. the force that results from
+      the gravity applied to the body mass.
+      The vector for the weight forces in the body frame is organized (Fx, Fy ,
+      Fz). The vector is 1-based. In other words, GetWeight(1) returns
+      Fx. Various convenience enumerators are defined in FGJSBBase. The relevant
+      enumerators for the forces returned by this call are, eX=1, eY=2, eZ=3.
+      units lbs.
+      @param idx the index of the forces component desired (1-based).
+      @return The ground forces applied on the body.
+  */
+  double GetWeight(int idx) const { return in.Mass * (in.Ti2b * vGravAccel)(idx); }
+  FGColumnVector3 GetWeight(void) const { return in.Mass * in.Ti2b * vGravAccel; }
 
   /** Initializes the FGAccelerations class prior to a new execution.
       Initializes the class prior to a new execution when the input data stored
@@ -327,12 +333,8 @@ public:
   /** Sets the property forces/hold-down. This allows to do hard 'hold-down'
       such as for rockets on a launch pad with engines ignited.
       @param hd enables the 'hold-down' function if non-zero
-   */
-  void SetHoldDown(int hd) {HoldDown = hd;}
-  /** Gets the value of the property forces/hold-down.
-      @result zero if the 'hold-down' function is disabled, non-zero otherwise.
-   */
-  int GetHoldDown(void) const {return HoldDown;}
+  */
+  void SetHoldDown(bool hd);
 
   struct Inputs {
     /// The body inertia matrix expressed in the body frame
@@ -347,8 +349,6 @@ public:
     FGMatrix33 Tec2b;
     /// Transformation matrix from the ECEF to the ECI frame
     FGMatrix33 Tec2i;
-    /// Orientation quaternion of the body with respect to the ECI frame
-    FGQuaternion qAttitudeECI;
     /// Total moments applied to the body except friction and gravity (expressed in the body frame)
     FGColumnVector3 Moment;
     /// Moments generated by the ground normal reactions expressed in the body frame. Does not account for friction.
@@ -387,7 +387,6 @@ private:
 
   FGColumnVector3 vPQRdot, vPQRidot;
   FGColumnVector3 vUVWdot, vUVWidot;
-  FGQuaternion vQtrndot;
   FGColumnVector3 vBodyAccel;
   FGColumnVector3 vGravAccel;
   FGColumnVector3 vFrictionForces;
@@ -395,10 +394,8 @@ private:
 
   int gravType;
   bool gravTorque;
-  int HoldDown;
 
   void CalculatePQRdot(void);
-  void CalculateQuatdot(void);
   void CalculateUVWdot(void);
 
   void ResolveFrictionForces(double dt);

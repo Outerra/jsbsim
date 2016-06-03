@@ -18,34 +18,51 @@
 # this program; if not, see <http://www.gnu.org/licenses/>
 #
 
-import unittest, sys, os
-from JSBSim_utils import SandBox, CreateFDM
+import os
+from JSBSim_utils import JSBSimTestCase, CreateFDM, RunTest, ExecuteUntil
 
 
-class TestHoldDown(unittest.TestCase):
-    def setUp(self):
-        self.sandbox = SandBox()
-
-    def tearDown(self):
-        self.sandbox.erase()
-
+class TestHoldDown(JSBSimTestCase):
     def test_static_hold_down(self):
         fdm = CreateFDM(self.sandbox)
         fdm.load_model('J246')
-        aircraft_path = self.sandbox.elude(self.sandbox.path_to_jsbsim_file('aircraft'))
+        aircraft_path = self.sandbox.path_to_jsbsim_file('aircraft')
         fdm.load_ic(os.path.join(aircraft_path, 'J246', 'LC39'), False)
-        fdm.set_property_value('forces/hold-down', 1.0)
+        fdm['forces/hold-down'] = 1.0
         fdm.run_ic()
-        h0 = fdm.get_property_value('position/h-sl-ft')
+        h0 = fdm['position/h-sl-ft']
         t = 0.0
 
         while t < 420.0:
             fdm.run()
-            t = fdm.get_property_value('simulation/sim-time-sec')
-            self.assertAlmostEqual(fdm.get_property_value('position/h-sl-ft'),
-                                   h0, delta=1E-5)
+            t = fdm['simulation/sim-time-sec']
+            self.assertAlmostEqual(fdm['position/h-sl-ft'], h0, delta=1E-5)
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestHoldDown)
-test_result = unittest.TextTestRunner(verbosity=2).run(suite)
-if test_result.failures or test_result.errors:
-    sys.exit(-1)  # 'make test' will report the test failed.
+    def test_hold_down_with_gnd_reactions(self):
+        fdm = CreateFDM(self.sandbox)
+        fdm.load_script(self.sandbox.path_to_jsbsim_file('scripts',
+                                                         'c1721.xml'))
+        fdm.run_ic()
+        ExecuteUntil(fdm, 0.25)
+
+        fdm['forces/hold-down'] = 1.0
+        h0 = fdm['position/h-sl-ft']
+        pitch = fdm['attitude/pitch-rad']
+        roll = fdm['attitude/roll-rad']
+        heading = fdm['attitude/heading-true-rad']
+
+        while fdm['simulation/sim-time-sec'] < 2.0:
+            fdm.run()
+            self.assertAlmostEqual(fdm['accelerations/pdot-rad_sec2'], 0.0)
+            self.assertAlmostEqual(fdm['accelerations/qdot-rad_sec2'], 0.0)
+            self.assertAlmostEqual(fdm['accelerations/rdot-rad_sec2'], 0.0)
+            self.assertAlmostEqual(fdm['accelerations/udot-ft_sec2'], 0.0)
+            self.assertAlmostEqual(fdm['accelerations/vdot-ft_sec2'], 0.0)
+            self.assertAlmostEqual(fdm['accelerations/wdot-ft_sec2'], 0.0)
+
+        self.assertAlmostEqual(fdm['position/h-sl-ft'], h0, delta=1E-6)
+        self.assertAlmostEqual(fdm['attitude/pitch-rad'], pitch)
+        self.assertAlmostEqual(fdm['attitude/roll-rad'], roll)
+        self.assertAlmostEqual(fdm['attitude/heading-true-rad'], heading)
+
+RunTest(TestHoldDown)

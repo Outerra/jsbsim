@@ -51,7 +51,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.82 2015/08/22 18:09:00 bcoconni Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.85 2016/04/16 12:24:39 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -94,7 +94,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich, Bertrand Coconnier
-    @version $Id: FGPropagate.h,v 1.82 2015/08/22 18:09:00 bcoconni Exp $
+    @version $Id: FGPropagate.h,v 1.85 2016/04/16 12:24:39 bcoconni Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,6 +134,8 @@ public:
     /** The current orientation of the vehicle, that is, the orientation of the
         body frame relative to the inertial (ECI) frame. */
     FGQuaternion qAttitudeECI;
+
+    FGQuaternion vQtrndot;
 
     FGColumnVector3 vInertialVelocity;
 
@@ -230,6 +232,17 @@ public:
       @return The body frame inertial angular rates in rad/sec.
   */
   const FGColumnVector3& GetPQRi(void) const {return VState.vPQRi;}
+
+  /** Retrieves the time derivative of the body orientation quaternion.
+      Retrieves the time derivative of the body orientation quaternion based on
+      the rate of change of the orientation between the body and the ECI frame.
+      The quaternion returned is represented by an FGQuaternion reference. The
+      quaternion is 1-based, so that the first element can be retrieved using
+      the "()" operator.
+      units rad/sec^2
+      @return The time derivative of the body orientation quaternion.
+  */
+  const FGQuaternion& GetQuaterniondot(void) const {return VState.vQtrndot;}
 
   /** Retrieves the Euler angles that define the vehicle orientation.
       Extracts the Euler angles from the quaternion that stores the orientation
@@ -552,7 +565,6 @@ public:
   void SetRadius(double r)
   {
     VState.vLocation.SetRadius(r);
-    VehicleRadius = r;
     VState.vInertialPosition = Tec2i * VState.vLocation;
   }
 
@@ -586,11 +598,16 @@ public:
     VState.vLocation -= Tb2ec*deltaLoc;
   }
 
+  /** Sets the property forces/hold-down. This allows to do hard 'hold-down'
+      such as for rockets on a launch pad with engines ignited.
+      @param hd enables the 'hold-down' function if non-zero
+  */
+  void SetHoldDown(bool hd);
+
   void DumpState(void);
 
   struct Inputs {
     FGColumnVector3 vPQRidot;
-    FGQuaternion vQtrndot;
     FGColumnVector3 vUVWidot;
     FGColumnVector3 vOmegaPlanet;
     double SemiMajor;
@@ -620,7 +637,6 @@ private:
 
   FGQuaternion Qec2b;
 
-  double VehicleRadius;
   FGColumnVector3 LocalTerrainVelocity, LocalTerrainAngularVelocity;
 
   eIntegrateType integrator_rotational_rate;
@@ -630,6 +646,7 @@ private:
 
   void CalculateInertialVelocity(void);
   void CalculateUVW(void);
+  void CalculateQuatdot(void);
 
   void Integrate( FGColumnVector3& Integrand,
                   FGColumnVector3& Val,

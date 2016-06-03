@@ -17,8 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>
 
-import os, sys, csv, string, tempfile, shutil
+import os, sys, string, tempfile, shutil, unittest
 import xml.etree.ElementTree as et
+import numpy as np
+import pandas as pd
 import jsbsim
 
 
@@ -45,14 +47,6 @@ class SandBox:
 
     def erase(self):
         shutil.rmtree(self._tmpdir)
-
-    def elude(self, path):
-        head, tail = os.path.split(path)
-        newpath = []
-        while head:
-            newpath = [tail] + newpath
-            head, tail = os.path.split(head)
-        return os.path.join(*newpath)
 
 
 def CreateFDM(sandbox):
@@ -91,109 +85,15 @@ def CheckXMLFile(f, header):
     return string.upper(tree.getroot().tag) == string.upper(header)
 
 
-class MismatchError(Exception):
-    pass
-
-
-class Table:
-    def __init__(self, headers=[]):
-        if headers:
-            self._lines = [headers]
-        else:
-            self._lines = []
-        self._missing = []
-
-    def ReadCSV(self, filename):
-        self._lines = []
-        self.missing = []
-
-        file_csv = open(filename, 'r')
-        first_line = True
-        for line in csv.reader(file_csv, delimiter=','):
-            if first_line:
-                first_line = False
-                line = map(string.strip, line)
-            else:
-                line = map(float, line)
-            self._lines += [line]
-
-        file_csv.close()
-
-    def add_line(self, line):
-        if len(line) != len(self._lines[0]):
-            raise MismatchError
-        self._lines += [line]
-
-    def get_column(self, col):
-        column = []
-
-        if isinstance(col, int):
-            if col < 0 or col >= len(self._lines[0]):
-                raise AttributeError
-        elif isinstance(col, str):
-            header = string.strip(col)
-            for col in xrange(len(self._lines[0])):
-                if header == self._lines[0][col]:
-                    break
-            else:
-                raise AttributeError
-        else:
-            raise TypeError
-
-        for line in self._lines:
-            column += [line[col]]
-        return column
-
-    def compare(self, other, precision=1E-5):
-        result = Table(['Property', 'delta', 'Time', 'ref value', 'value'])
-
-        if len(self._lines) != len(other._lines):
-            raise MismatchError
-
-        for row, line in enumerate(self._lines[1:]):
-            if abs(line[0] - other._lines[row+1][0]) > 1E-10:
-                raise MismatchError
-
-        for col, key in enumerate(self._lines[0][1:]):
-            for col0, key0 in enumerate(other._lines[0]):
-                if key == key0:
-                    break
-            else:
-                result._missing += [key]
-                continue
-
-            comparison = [key, 0.0]
-            for row, line in enumerate(self._lines[1:]):
-                delta = abs(line[col+1] - other._lines[row+1][col0])
-                if delta > comparison[1]:
-                    comparison = [key, delta, line[0], line[col+1],
-                                  other._lines[row+1][col0]]
-
-            if comparison[1] > precision:
-                result.add_line(comparison)
-
-        return result
-
-    def empty(self):
-        return len(self._lines) <= 1
-
-    def __repr__(self):
-        col_width = [max(len(str(item)) for item in col) for col in zip(*self._lines)]
-        output = ''
-        for line in self._lines:
-            output += "|" + "|".join("{:{}}".format(str(item), col_width[i]) for i, item in enumerate(line)) + "|\n"
-        return output
-
-
 def CopyAircraftDef(script_path, sandbox):
     # Get the aircraft name
-    tree = et.parse(sandbox.elude(script_path))
+    tree = et.parse(script_path)
     use_element = tree.getroot().find('use')
     aircraft_name = use_element.attrib['aircraft']
 
     # Then, create a directory aircraft/aircraft_name in the build directory
     aircraft_path = os.path.join('aircraft', aircraft_name)
-    path_to_jsbsim_aircrafts = sandbox.elude(sandbox.path_to_jsbsim_file(aircraft_path))
+    path_to_jsbsim_aircrafts = sandbox.path_to_jsbsim_file(aircraft_path)
     aircraft_path = sandbox(aircraft_path)
     if not os.path.exists(aircraft_path):
         os.makedirs(aircraft_path)
@@ -203,7 +103,8 @@ def CopyAircraftDef(script_path, sandbox):
     IC_file = append_xml(use_element.attrib['initialize'])
     shutil.copy(os.path.join(path_to_jsbsim_aircrafts, IC_file), aircraft_path)
 
-    tree = et.parse(os.path.join(path_to_jsbsim_aircrafts, aircraft_name+'.xml'))
+    tree = et.parse(os.path.join(path_to_jsbsim_aircrafts,
+                                 aircraft_name+'.xml'))
 
     # The aircraft definition file may also load some data from external files.
     # If so, we need to copy these files in our directory
@@ -223,11 +124,62 @@ def CopyAircraftDef(script_path, sandbox):
                                                      'Systems', name)
                 print name_with_system_path
                 if os.path.exists(name_with_system_path):
-                    system_path = sandbox(sandbox.elude(aircraft_path),
-                                          'Systems')
+                    system_path = sandbox(aircraft_path, 'Systems')
                     if not os.path.exists(system_path):
                         os.makedirs(system_path)
                     shutil.copy(name_with_system_path,
                                 os.path.join(system_path, subdirs))
 
     return tree, aircraft_name, path_to_jsbsim_aircrafts
+
+
+class JSBSimTestCase(unittest.TestCase):
+    def setUp(self, *args):
+        self.sandbox = SandBox(*args)
+        self.currentdir = os.getcwd()
+        os.chdir(self.sandbox())
+
+    def tearDown(self):
+        self.sandbox.erase()
+        os.chdir(self.currentdir)
+
+    # Generator that returns the full path to all the scripts in JSBSim
+    def script_list(self, blacklist=[]):
+        script_path = self.sandbox.path_to_jsbsim_file('scripts')
+        for f in os.listdir(script_path):
+            if f in blacklist:
+                continue
+
+            fullpath = os.path.join(script_path, f)
+
+            # Does f contains a JSBSim script ?
+            if CheckXMLFile(fullpath, 'runscript'):
+                yield fullpath
+
+
+def RunTest(test):
+    suite = unittest.TestLoader().loadTestsFromTestCase(test)
+    test_result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if test_result.failures or test_result.errors:
+        sys.exit(-1)  # 'make test' will report the test failed.
+
+
+def isDataMatching(ref, other):
+    delta = np.abs(ref - other)
+    # Check the data are matching i.e. the time steps are the same between the
+    # two data sets and is also the same for the output data. If it does not,
+    # pandas will fill the missing data with NaNs. Below we are checking there
+    # are no NaNs in delta.
+    return delta.notnull().any().any()
+
+
+def FindDifferences(ref, other, tol):
+    delta = np.abs(ref - other)
+
+    idxmax = delta.idxmax()
+    ref_max = pd.Series(ref.lookup(idxmax, ref.columns), index=ref.columns)
+    other_max = pd.Series(other.lookup(idxmax, other.columns),
+                          index=other.columns)
+    diff = pd.concat([idxmax, delta.max(), ref_max, other_max], axis=1)
+    diff.columns = ['Time', 'delta', 'ref value', 'value']
+    return diff[diff['delta'] > tol]

@@ -19,35 +19,39 @@
 # this program; if not, see <http://www.gnu.org/licenses/>
 #
 
-import sys, unittest, os
-from JSBSim_utils import CreateFDM, Table, SandBox
+import os
+import pandas as pd
+from JSBSim_utils import (JSBSimTestCase, CreateFDM, isDataMatching,
+                          FindDifferences, RunTest)
 
 
-class TestOrbitCheckCase(unittest.TestCase):
+class TestOrbitCheckCase(JSBSimTestCase):
     def setUp(self):
-        self.sandbox = SandBox('check_cases', 'orbit')
-
-    def tearDown(self):
-        self.sandbox.erase()
+        JSBSimTestCase.setUp(self, 'check_cases', 'orbit')
 
     def testOrbitCheckCase(self):
         os.environ['JSBSIM_DEBUG'] = str(0)
         fdm = CreateFDM(self.sandbox)
-        fdm.load_script(self.sandbox.path_to_jsbsim_file('scripts', 'ball_orbit.xml'))
+        fdm.load_script(self.sandbox.path_to_jsbsim_file('scripts',
+                                                         'ball_orbit.xml'))
         fdm.run_ic()
 
         while fdm.run():
             pass
 
-        ref, current = Table(), Table()
-        ref.ReadCSV(self.sandbox.elude(self.sandbox.path_to_jsbsim_file('logged_data', 'BallOut.csv')))
-        current.ReadCSV(self.sandbox('BallOut.csv'))
+        ref = pd.read_csv(self.sandbox.path_to_jsbsim_file('logged_data',
+                                                           'BallOut.csv'),
+                          index_col=0)
+        current = pd.read_csv('BallOut.csv', index_col=0)
 
-        diff = ref.compare(current)
+        # Check the data are matching i.e. the time steps are the same between
+        # the two data sets and that the output data are also the same.
+        self.assertTrue(isDataMatching(ref, current))
+
+        # Find all the data that are differing by more than 1E-5 between the
+        # two data sets.
+        diff = FindDifferences(ref, current, 1E-5)
         self.longMessage = True
-        self.assertTrue(diff.empty(), msg='\n'+repr(diff))
+        self.assertEqual(len(diff), 0, msg='\n'+diff.to_string())
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestOrbitCheckCase)
-test_result = unittest.TextTestRunner(verbosity=2).run(suite)
-if test_result.failures or test_result.errors:
-    sys.exit(-1)  # 'make test' will report the test failed.
+RunTest(TestOrbitCheckCase)
