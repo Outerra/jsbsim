@@ -19,40 +19,36 @@
 # this program; if not, see <http://www.gnu.org/licenses/>
 #
 
-import os, sys, unittest
+import os
 import xml.etree.ElementTree as et
-from JSBSim_utils import Table, CreateFDM, ExecuteUntil, SandBox, append_xml, CopyAircraftDef
+import pandas as pd
+from JSBSim_utils import (JSBSimTestCase, CreateFDM, ExecuteUntil, append_xml,
+                          CopyAircraftDef, isDataMatching, FindDifferences,
+                          RunTest)
 
-class TestModelLoading(unittest.TestCase):
-    def setUp(self):
-        self.sandbox = SandBox()
 
-    def tearDown(self):
-        self.sandbox.erase()
-
+class TestModelLoading(JSBSimTestCase):
     def BuildReference(self, script_name):
         # Run the script
-        self.script = self.sandbox.path_to_jsbsim_file(os.path.join('scripts',
-                                                               script_name))
+        self.script = self.sandbox.path_to_jsbsim_file('scripts', script_name)
         self.sandbox.delete_csv_files()
         fdm = CreateFDM(self.sandbox)
         fdm.set_output_directive(self.sandbox.path_to_jsbsim_file('tests',
                                                                   'output.xml'))
         fdm.load_script(self.script)
-        fdm.set_property_value('simulation/randomseed', 0.0)
+        fdm['simulation/randomseed'] = 0.0
 
         fdm.run_ic()
         ExecuteUntil(fdm, 50.0)
 
-        self.ref = Table()
-        self.ref.ReadCSV(self.sandbox("output.csv"))
+        self.ref = pd.read_csv("output.csv", index_col=0)
 
         # Since the script will work with modified versions of the aircraft XML
-        # definition file, we need to make a copy of the directory that contains
-        # all the input data of that aircraft
+        # definition file, we need to make a copy of the directory that
+        # contains all the input data of that aircraft
 
         tree, self.aircraft_name, self.path_to_jsbsim_aircrafts = CopyAircraftDef(self.script, self.sandbox)
-        self.aircraft_path = self.sandbox('aircraft', self.aircraft_name)
+        self.aircraft_path = os.path.join('aircraft', self.aircraft_name)
 
     def ProcessAndCompare(self, section):
         # Here we determine if the original aircraft definition <section> is
@@ -100,9 +96,11 @@ class TestModelLoading(unittest.TestCase):
         # directories in which the file is allowed to be stored until the file
         # is located.
         if not os.path.exists(section_file) and section_element.tag == 'system':
-            section_file = os.path.join(self.path_to_jsbsim_aircrafts, "systems", file_name)
+            section_file = os.path.join(self.path_to_jsbsim_aircrafts,
+                                        "systems", file_name)
             if not os.path.exists(section_file):
-                section_file = self.sandbox.elude(self.sandbox.path_to_jsbsim_file("systems", file_name))
+                section_file = self.sandbox.path_to_jsbsim_file("systems",
+                                                                file_name)
 
         # The original <section> tag is dropped and replaced by the content of
         # the file.
@@ -123,29 +121,32 @@ class TestModelLoading(unittest.TestCase):
         # We need to tell JSBSim that the aircraft definition is located in the
         # directory build/.../aircraft
         fdm.set_aircraft_path('aircraft')
-        fdm.set_output_directive(self.sandbox.path_to_jsbsim_file('tests', 'output.xml'))
+        fdm.set_output_directive(self.sandbox.path_to_jsbsim_file('tests',
+                                                                  'output.xml'))
         fdm.load_script(self.script)
-        fdm.set_property_value('simulation/randomseed', 0.0)
+        fdm['simulation/randomseed'] = 0.0
 
         fdm.run_ic()
         ExecuteUntil(fdm, 50.0)
 
-        mod = Table()
-        mod.ReadCSV(self.sandbox('output.csv'))
+        mod = pd.read_csv('output.csv', index_col=0)
+
+        # Check the data are matching i.e. the time steps are the same between
+        # the two data sets and that the output data are also the same.
+        self.assertTrue(isDataMatching(self.ref, mod))
 
         # Whether the data is read from the aircraft definition file or from an
         # external file, the results shall be exactly identical. Hence the
         # precision set to 0.0.
-        diff = self.ref.compare(mod, 0.0)
-        self.assertTrue(diff.empty(),
-                        msg='\nTesting section "'+section+'"\n'+repr(diff))
+        diff = FindDifferences(self.ref, mod, 0.0)
+        self.assertEqual(len(diff), 0,
+                         msg='\nTesting section "'+section+'"\n'+diff.to_string())
 
     def test_model_loading(self):
         self.longMessage = True
 
         self.BuildReference('c1724.xml')
-        output_ref = Table()
-        output_ref.ReadCSV(self.sandbox('JSBout172B.csv'))
+        output_ref = pd.read_csv('JSBout172B.csv', index_col=0)
 
         self.ProcessAndCompare('aerodynamics')
         self.ProcessAndCompare('autopilot')
@@ -164,11 +165,11 @@ class TestModelLoading(unittest.TestCase):
         # the result 'mod' below where the <output> tag was moved in a separate
         # file.
         self.ProcessAndCompare('output')
-        mod = Table()
-        mod.ReadCSV(self.sandbox('JSBout172B.csv'))
-        diff = output_ref.compare(mod, 0.0)
-        self.assertTrue(diff.empty(),
-                        msg='\nTesting section "output"\n'+repr(diff))
+        mod = pd.read_csv('JSBout172B.csv', index_col=0)
+        self.assertTrue(isDataMatching(output_ref, mod))
+        diff = FindDifferences(output_ref, mod, 0.0)
+        self.assertEqual(len(diff), 0,
+                         msg='\nTesting section "output"\n'+diff.to_string())
 
         self.BuildReference('weather-balloon.xml')
         self.ProcessAndCompare('buoyant_forces')
@@ -176,7 +177,4 @@ class TestModelLoading(unittest.TestCase):
         self.BuildReference('Concorde_runway_test.xml')
         self.ProcessAndCompare('external_reactions')
 
-suite = unittest.TestLoader().loadTestsFromTestCase(TestModelLoading)
-test_result = unittest.TextTestRunner(verbosity=2).run(suite)
-if test_result.failures or test_result.errors:
-    sys.exit(-1) # 'make test' will report the test failed.
+RunTest(TestModelLoading)

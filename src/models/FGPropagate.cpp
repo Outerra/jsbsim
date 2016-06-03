@@ -79,7 +79,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPropagate.cpp,v 1.127 2015/08/22 18:09:00 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGPropagate.cpp,v 1.131 2016/05/01 18:25:57 bcoconni Exp $");
 IDENT(IdHdr,ID_PROPAGATE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,8 +87,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGPropagate::FGPropagate(FGFDMExec* fdmex)
-  : FGModel(fdmex),
-    VehicleRadius(0)
+  : FGModel(fdmex)
 {
   Debug(0);
   Name = "FGPropagate";
@@ -172,7 +171,6 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
 
   // Compute local terrain velocity
   RecomputeLocalTerrainVelocity();
-  VehicleRadius = GetRadius();
 
   // Set the angular velocities of the body frame relative to the ECEF frame,
   // expressed in the body frame.
@@ -181,6 +179,7 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
   VState.vPQRi = VState.vPQR + Ti2b * in.vOmegaPlanet;
 
   CalculateInertialVelocity(); // Translational position derivative
+  CalculateQuatdot();  // Angular orientation derivative
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -191,7 +190,7 @@ void FGPropagate::InitializeDerivatives()
   VState.dqPQRidot.assign(5, in.vPQRidot);
   VState.dqUVWidot.assign(5, in.vUVWidot);
   VState.dqInertialVelocity.assign(5, VState.vInertialVelocity);
-  VState.dqQtrndot.assign(5, in.vQtrndot);
+  VState.dqQtrndot.assign(5, VState.vQtrndot);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -223,16 +222,18 @@ bool FGPropagate::Run(bool Holding)
 
   // Propagate rotational / translational velocity, angular /translational position, respectively.
 
-  Integrate(VState.qAttitudeECI,      in.vQtrndot,          VState.dqQtrndot,          dt, integrator_rotational_position);
-  Integrate(VState.vPQRi,             in.vPQRidot,          VState.dqPQRidot,          dt, integrator_rotational_rate);
-  Integrate(VState.vInertialPosition, VState.vInertialVelocity, VState.dqInertialVelocity, dt, integrator_translational_position);
-  Integrate(VState.vInertialVelocity, in.vUVWidot,          VState.dqUVWidot,          dt, integrator_translational_rate);
+  if (!FDMExec->IntegrationSuspended()) {
+    Integrate(VState.qAttitudeECI,      VState.vQtrndot,      VState.dqQtrndot,          dt, integrator_rotational_position);
+    Integrate(VState.vPQRi,             in.vPQRidot,          VState.dqPQRidot,          dt, integrator_rotational_rate);
+    Integrate(VState.vInertialPosition, VState.vInertialVelocity, VState.dqInertialVelocity, dt, integrator_translational_position);
+    Integrate(VState.vInertialVelocity, in.vUVWidot,          VState.dqUVWidot,          dt, integrator_translational_rate);
+  }
 
   // CAUTION : the order of the operations below is very important to get transformation
   // matrices that are consistent with the new state of the vehicle
 
   // 1. Update the Earth position angle (EPA)
-  VState.vLocation.IncrementEarthPositionAngle(in.vOmegaPlanet(eZ)*(in.DeltaT*rate));
+  VState.vLocation.IncrementEarthPositionAngle(in.vOmegaPlanet(eZ)*dt);
 
   // 2. Update the Ti2ec and Tec2i transforms from the updated EPA
   Ti2ec = VState.vLocation.GetTi2ec(); // ECI to ECEF transform
@@ -254,9 +255,11 @@ bool FGPropagate::Run(bool Holding)
 
   // Set auxilliary state variables
   RecomputeLocalTerrainVelocity();
-  VehicleRadius = GetRadius(); // Calculate current aircraft radius from center of planet
 
   VState.vPQR = VState.vPQRi - Ti2b * in.vOmegaPlanet;
+
+  // Angular orientation derivative
+  CalculateQuatdot();
 
   VState.qAttitudeLocal = Tl2b.GetQuaternion();
 
@@ -265,6 +268,33 @@ bool FGPropagate::Run(bool Holding)
 
   Debug(2);
   return false;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetHoldDown(bool hd)
+{
+  if (hd) {
+    VState.vUVW.InitMatrix();
+    CalculateInertialVelocity();
+    VState.vPQR.InitMatrix();
+    VState.vPQRi = Ti2b * in.vOmegaPlanet;
+    CalculateQuatdot();
+    InitializeDerivatives();
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Compute the quaternion orientation derivative
+//
+// vQtrndot is the quaternion derivative.
+// Reference: See Stevens and Lewis, "Aircraft Control and Simulation",
+//            Second edition (2004), eqn 1.5-16b (page 50)
+
+void FGPropagate::CalculateQuatdot(void)
+{
+  // Compute quaternion orientation derivative on current body rates
+  VState.vQtrndot = VState.qAttitudeECI.GetQDot(VState.vPQRi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,6 +490,7 @@ void FGPropagate::SetInertialOrientation(const FGQuaternion& Qi)
   VState.qAttitudeECI.Normalize();
   UpdateBodyMatrices();
   VState.qAttitudeLocal = Tl2b.GetQuaternion();
+  CalculateQuatdot();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -475,6 +506,7 @@ void FGPropagate::SetInertialVelocity(const FGColumnVector3& Vi) {
 void FGPropagate::SetInertialRates(const FGColumnVector3& vRates) {
   VState.vPQRi = Ti2b * vRates;
   VState.vPQR = VState.vPQRi - Ti2b * in.vOmegaPlanet;
+  CalculateQuatdot();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -551,12 +583,12 @@ void FGPropagate::SetVState(const VehicleState& vstate)
   UpdateLocationMatrices();
   SetInertialOrientation(vstate.qAttitudeECI);
   RecomputeLocalTerrainVelocity();
-  VehicleRadius = GetRadius();
   VState.vUVW = vstate.vUVW;
   vVel = Tb2l * VState.vUVW;
   VState.vPQR = vstate.vPQR;
   VState.vPQRi = VState.vPQR + Ti2b * in.vOmegaPlanet;
   VState.vInertialPosition = vstate.vInertialPosition;
+  CalculateQuatdot();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -564,7 +596,6 @@ void FGPropagate::SetVState(const VehicleState& vstate)
 void FGPropagate::UpdateVehicleState(void)
 {
   RecomputeLocalTerrainVelocity();
-  VehicleRadius = GetRadius();
   VState.vInertialPosition = Tec2i * VState.vLocation;
   UpdateLocationMatrices();
   UpdateBodyMatrices();

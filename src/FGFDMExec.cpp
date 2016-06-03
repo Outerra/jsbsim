@@ -72,7 +72,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.186 2016/01/10 16:32:26 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFDMExec.cpp,v 1.191 2016/05/16 18:19:57 bcoconni Exp $");
 IDENT(IdHdr,ID_FDMEXEC);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,6 +106,7 @@ FGFDMExec::FGFDMExec(
   StandAlone = false;
   ResetMode = 0;
   RandomSeed = 0;
+  HoldDown = false;
 
   IncrementThenHolding = false;  // increment then hold is off by default
   TimeStepsUntilHold = -1;
@@ -179,6 +180,7 @@ FGFDMExec::FGFDMExec(
   instance->Tie("simulation/jsbsim-debug", this, &FGFDMExec::GetDebugLevel, &FGFDMExec::SetDebugLevel);
   instance->Tie("simulation/frame", (int *)&Frame, false);
   instance->Tie("simulation/trim-completed", (int *)&trim_completed, false);
+  instance->Tie("forces/hold-down", this, &FGFDMExec::GetHoldDown, &FGFDMExec::SetHoldDown);
 
   Constructing = false;
 }
@@ -353,7 +355,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
   switch(idx) {
   case ePropagate:
     Propagate->in.vPQRidot     = Accelerations->GetPQRidot();
-    Propagate->in.vQtrndot     = Accelerations->GetQuaterniondot();
     Propagate->in.vUVWidot     = Accelerations->GetUVWidot();
     Propagate->in.DeltaT       = dT;
     break;
@@ -453,7 +454,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     GroundReactions->in.VcalibratedKts  = Auxiliary->GetVcalibratedKTS();
     GroundReactions->in.Temperature     = Atmosphere->GetTemperature();
     GroundReactions->in.TakeoffThrottle = (FCS->GetThrottlePos().size() > 0) ? (FCS->GetThrottlePos(0) > 0.90) : false;
-    GroundReactions->in.SteerPosDeg     = FCS->GetSteerPosDeg();
     GroundReactions->in.BrakePos        = FCS->GetBrakePos();
     GroundReactions->in.FCSGearPos      = FCS->GetGearPos();
     GroundReactions->in.EmptyWeight     = MassBalance->GetEmptyWeight();
@@ -505,7 +505,6 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.Tb2i     = Propagate->GetTb2i();
     Accelerations->in.Tec2b    = Propagate->GetTec2b();
     Accelerations->in.Tec2i    = Propagate->GetTec2i();
-    Accelerations->in.qAttitudeECI = Propagate->GetQuaternionECI();
     Accelerations->in.Moment   = Aircraft->GetMoments();
     Accelerations->in.GroundMoment  = GroundReactions->GetMoments();
     Accelerations->in.Force    = Aircraft->GetForces();
@@ -569,6 +568,7 @@ bool FGFDMExec::RunIC(void)
   Models[eOutput]->InitModel();
 
   Run();
+  Propagate->InitializeDerivatives();
   ResumeIntegration(); // Restores the integration rate to what it was.
 
   if (debug_lvl > 0) {
@@ -601,7 +601,6 @@ void FGFDMExec::Initialize(FGInitialCondition* FGIC)
   Propagate->SetInitialState(FGIC);
   Winds->SetWindNED(FGIC->GetWindNEDFpsIC());
   Run();
-  Propagate->InitializeDerivatives();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -620,12 +619,25 @@ void FGFDMExec::ResetToInitialConditions(int mode)
     Models[i]->InitModel();
   }
 
-  RunIC();
-
   if (Script)
     Script->ResetEvents();
   else
     Setsim_time(0.0);
+
+  RunIC();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::SetHoldDown(bool hd)
+{
+  HoldDown = hd;
+  Accelerations->SetHoldDown(hd);
+  if (hd) {
+    Propagate->in.vPQRidot = Accelerations->GetPQRidot();
+    Propagate->in.vUVWidot = Accelerations->GetUVWidot();
+  }
+  Propagate->SetHoldDown(hd);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -746,10 +758,11 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     if (element) {
       result = ((FGGroundReactions*)Models[eGroundReactions])->Load(element);
       if (!result) {
-        cerr << endl << "Aircraft ground_reactions element has problems in file " << aircraftCfgFileName << endl;
+        cerr << endl << element->ReadFrom()
+             << "Aircraft ground_reactions element has problems in file "
+             << aircraftCfgFileName << endl;
         return result;
       }
-      ((FGFCS*)Models[eSystems])->AddGear(((FGGroundReactions*)Models[eGroundReactions])->GetNumGearUnits());
     } else {
       cerr << endl << "No ground_reactions element was found in the aircraft config file." << endl;
       return false;

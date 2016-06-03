@@ -50,6 +50,12 @@ INCLUDES
 #  include <time.h>
 #endif
 
+#if defined(_MSC_VER)
+#  include <float.h>
+#elif defined(__GNUC__) && !defined(sgi)
+#  include <fenv.h>
+#endif
+
 #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -72,7 +78,7 @@ using JSBSim::Element;
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: JSBSim.cpp,v 1.87 2015/11/24 13:06:24 ehofman Exp $");
+IDENT(IdSrc,"$Id: JSBSim.cpp,v 1.89 2016/05/20 14:14:05 ehofman Exp $");
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GLOBAL DATA
@@ -278,6 +284,14 @@ IMPLEMENTATION
 
 int main(int argc, char* argv[])
 {
+#if defined(_MSC_VER)
+  _clearfp();
+  _controlfp(_controlfp(0, 0) & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW),
+           _MCW_EM);
+#elif defined(__GNUC__) && !defined(sgi)
+  feenableexcept(FE_DIVBYZERO | FE_INVALID);
+#endif
+
   try {
     real_main(argc, argv);
   } catch (string& msg) {

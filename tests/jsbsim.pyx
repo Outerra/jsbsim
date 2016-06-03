@@ -15,83 +15,77 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <http://www.gnu.org/licenses/>
 
-from libcpp cimport bool
-from libcpp.string cimport string
-from libcpp.vector cimport vector
+import os, platform, numpy
 
-import os, platform
+cdef class FGMatrix33:
 
-cdef extern from "ExceptionManagement.h":
-    cdef void convertJSBSimToPyExc()
+    cdef c_FGMatrix33 *thisptr
 
-cdef extern from "models/FGPropulsion.h" namespace "JSBSim":
-    cdef cppclass c_FGPropulsion "JSBSim::FGPropulsion":
-        c_FGPropulsion(c_FGFDMExec* fdm)
-        void InitRunning(int n)
-        int GetNumEngines()
+    def __init__(self):
+        self.thisptr = NULL
 
-cdef extern from "initialization/FGInitialCondition.h" namespace "JSBSim":
-    cdef cppclass c_FGInitialCondition "JSBSim::FGInitialCondition":
-        c_FGInitialCondition(c_FGFDMExec* fdm)
-        bool Load(string rstfile, bool useStoredPath)
+    def __dealloc__(self):
+        if self.thisptr != NULL:
+            del self.thisptr
 
-cdef extern from "FGFDMExec.h" namespace "JSBSim":
-    cdef cppclass c_FGFDMExec "JSBSim::FGFDMExec":
-        c_FGFDMExec(int root, int fdmctr)
-        void Unbind()
-        bool Run() except +convertJSBSimToPyExc
-        bool RunIC() except +
-        bool LoadModel(string model,
-                       bool add_model_to_path)
-        bool LoadModel(string aircraft_path,
-                       string engine_path,
-                       string systems_path,
-                       string model,
-                       bool add_model_to_path)
-        bool LoadScript(string script, double delta_t, string initfile) except +
-        bool SetEnginePath(string path)
-        bool SetAircraftPath(string path)
-        bool SetSystemsPath(string path)
-        void SetRootDir(string path)
-        string GetEnginePath()
-        string GetAircraftPath()
-        string GetSystemsPath()
-        string GetRootDir()
-        string GetFullAircraftPath()
-        double GetPropertyValue(string property)
-        void SetPropertyValue(string property, double value) except +convertJSBSimToPyExc
-        string GetModelName()
-        bool SetOutputDirectives(string fname) except +
-        #void ForceOutput(int idx=0)
-        void SetLoggingRate(double rate)
-        bool SetOutputFileName(int n, string fname)
-        string GetOutputFileName(int n)
-        void DoTrim(int mode) except +
-        void DisableOutput()
-        void EnableOutput()
-        void Hold()
-        void EnableIncrementThenHold(int time_steps)
-        void CheckIncrementalHold()
-        void Resume()
-        bool Holding()
-        void ResetToInitialConditions(int mode)
-        void SetDebugLevel(int level)
-        string QueryPropertyCatalog(string check)
-        void PrintPropertyCatalog()
-        void SetTrimStatus(bool status)
-        bool GetTrimStatus()
-        string GetPropulsionTankReport()
-        double GetSimTime()
-        double GetDeltaT()
-        void SuspendIntegration()
-        void ResumeIntegration()
-        bool IntegrationSuspended()
-        bool Setsim_time(double cur_time)
-        void Setdt(double delta_t)
-        double IncrTime()
-        int GetDebugLevel()
-        c_FGPropulsion* GetPropulsion()
-        c_FGInitialCondition* GetIC()
+    def __call__(self, row, col):
+        return self.thisptr.Entry(row, col)
+
+cdef class FGColumnVector3:
+
+    cdef c_FGColumnVector3 *thisptr
+
+    def __init__(self):
+        self.thisptr = NULL
+
+    def __dealloc__(self):
+        if self.thisptr != NULL:
+            del self.thisptr
+
+    def __call__(self, idx):
+        return self.thisptr.Entry(idx)
+
+
+def convertToNumpyMat(m):
+    return numpy.mat([[m(1, 1), m(1, 2), m(1, 3)],
+                      [m(2, 1), m(2, 2), m(2, 3)],
+                      [m(3, 1), m(3, 2), m(3, 3)]])
+
+
+def convertToNumpyVec(v):
+    return numpy.mat([v(1), v(2), v(3)]).T
+
+cdef class FGPropagate:
+
+    cdef c_FGPropagate *thisptr
+
+    def __init__(self):
+        self.thisptr = NULL
+
+    def get_Tl2b(self):
+        Tl2b = FGMatrix33()
+        Tl2b.thisptr = new c_FGMatrix33(self.thisptr.GetTl2b())
+        return convertToNumpyMat(Tl2b)
+
+    def get_Tec2b(self):
+        Tec2b = FGMatrix33()
+        Tec2b.thisptr = new c_FGMatrix33(self.thisptr.GetTec2b())
+        return convertToNumpyMat(Tec2b)
+
+    def get_uvw(self):
+        vUVW = FGColumnVector3()
+        vUVW.thisptr = new c_FGColumnVector3(self.thisptr.GetUVW())
+        return convertToNumpyVec(vUVW)
+
+cdef class FGPropertyManager:
+
+     cdef c_FGPropertyManager *thisptr
+
+     def __init__(self):
+         self.thisptr = NULL
+
+     def hasNode(self, path):
+         return self.thisptr.HasNode(path)
 
 # this is the python wrapper class
 cdef class FGFDMExec:
@@ -121,7 +115,7 @@ cdef class FGFDMExec:
         for prop in record_properties:
             y[prop] = []
         while self.get_sim_time() < t_final:
-            if (self.run() == False):
+            if self.run() is False:
                 break
             if verbose:
                 print 't:', self.get_sim_time()
@@ -398,13 +392,13 @@ cdef class FGFDMExec:
         """
         self.thisptr.DoTrim(mode)
 
-    def do_disable_output(self):
+    def disable_output(self):
         """
         Disables data logging to all outputs.
         """
         self.thisptr.DisableOutput()
 
-    def do_enable_output(self):
+    def enable_output(self):
         """
         Enables data logging to all outputs.
         """
@@ -559,3 +553,13 @@ cdef class FGFDMExec:
 
     def load_ic(self, rstfile, useStoredPath):
         return self.thisptr.GetIC().Load(rstfile, useStoredPath)
+
+    def get_propagate(self):
+        propagate = FGPropagate()
+        propagate.thisptr = self.thisptr.GetPropagate()
+        return propagate
+
+    def get_property_manager(self):
+        pm = FGPropertyManager()
+        pm.thisptr = self.thisptr.GetPropertyManager()
+        return pm
