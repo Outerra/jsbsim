@@ -213,7 +213,7 @@ FGFDMExec::~FGFDMExec()
 
   PropertyCatalog.clear();
   
-  SetGroundCallback(0);
+  //SetGroundCallback(0);
 
   if (FDMctr > 0) (*FDMctr)--;
 
