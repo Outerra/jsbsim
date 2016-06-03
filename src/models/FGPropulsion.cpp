@@ -775,12 +775,12 @@ void FGPropulsion::bind(void)
 
   PropertyManager->Tie("propulsion/active_engine", this, (iPMF)&FGPropulsion::GetActiveEngine,
                         &FGPropulsion::SetActiveEngine, true);
-  PropertyManager->Tie("propulsion/num_engines", this, (iPMF)&FGPropulsion::GetNumEngines);
-  PropertyManager->Tie("propulsion/total-fuel-lbs", this, &FGPropulsion::GetTotalFuelQuantity);
-  PropertyManager->Tie("propulsion/refuel", this, &FGPropulsion::GetRefuel,
-                        &FGPropulsion::SetRefuel, true);
-  PropertyManager->Tie("propulsion/fuel_dump", this, &FGPropulsion::GetFuelDump,
-                        &FGPropulsion::SetFuelDump, true);
+  //PropertyManager->Tie("propulsion/num_engines", this, (iPMF)&FGPropulsion::GetNumEngines);
+  //PropertyManager->Tie("propulsion/total-fuel-lbs", this, &FGPropulsion::GetTotalFuelQuantity);
+  //PropertyManager->Tie("propulsion/refuel", this, &FGPropulsion::GetRefuel,
+  //                      &FGPropulsion::SetRefuel, true);
+  //PropertyManager->Tie("propulsion/fuel_dump", this, &FGPropulsion::GetFuelDump,
+  //                      &FGPropulsion::SetFuelDump, true);
   PropertyManager->Tie("forces/fbx-prop-lbs", this, eX, (PMF)&FGPropulsion::GetForces);
   PropertyManager->Tie("forces/fby-prop-lbs", this, eY, (PMF)&FGPropulsion::GetForces);
   PropertyManager->Tie("forces/fbz-prop-lbs", this, eZ, (PMF)&FGPropulsion::GetForces);
