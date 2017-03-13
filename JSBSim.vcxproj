@@ -45,7 +45,7 @@
     <OutDir>$(SolutionDir)..\..\..\bin\</OutDir>
     <IntDir>$(SolutionDir)..\..\..\out\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName)d</TargetName>
+    <TargetName>$(ProjectName)_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\..\..\bin\</OutDir>
