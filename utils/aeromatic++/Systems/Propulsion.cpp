@@ -570,12 +570,11 @@ std::string TurbineEngine::engine()
     {
         if (_bypass_ratio < 0.07f) _bypass_ratio = 0.07f;
         tsfc =  0.635f - 0.144f * log10f(_oapr) * log10f(_bypass_ratio);
-        atsfc = 3.27f - 0.451f * log10f(2.9f * _oapr / _bypass_ratio);
     }
-    else
-    {
+    else {
         tsfc = 0.7533f - 0.161f * log10f(0.0625f * _oapr * _bypass_ratio);
     }
+    atsfc = 3.27f - 0.451f * log10f(2.9f * _oapr / _bypass_ratio);
 
     file.precision(1);
     file.flags(std::ios::right);
@@ -630,7 +629,7 @@ std::string TurbineEngine::engine()
     file << "    <independentVar lookup=\"row\">velocities/mach</independentVar>" << std::endl;
     file << "    <independentVar lookup=\"column\">atmosphere/density-altitude</independentVar>" << std::endl;
     file << "    <tableData>" << std::endl;
-    file << "         -10000     0     10000   20000   30000   40000   50000   60000" << std::endl;
+    file << "         -10000     0     10000   20000   30000   40000   50000   90000" << std::endl;
     file << "     0.0  0.0430  0.0488  0.0528  0.0694  0.0899  0.1183  0.1467  0" << std::endl;
     file << "     0.2  0.0500  0.0501  0.0335  0.0544  0.0797  0.1049  0.1342  0" << std::endl;
     file << "     0.4  0.0040  0.0047  0.0020  0.0272  0.0595  0.0891  0.1203  0" << std::endl;
@@ -646,7 +645,7 @@ std::string TurbineEngine::engine()
     file << "    <independentVar lookup=\"row\">velocities/mach</independentVar>" << std::endl;
     file << "    <independentVar lookup=\"column\">atmosphere/density-altitude</independentVar>" << std::endl;
     file << "    <tableData>" << std::endl;
-    file << "          -10000       0   10000   20000   30000   40000   50000   60000" << std::endl;
+    file << "          -10000       0   10000   20000   30000   40000   50000   60000   90000" << std::endl;
 
     for (unsigned i=0; i<8; ++i)
     {
@@ -657,6 +656,7 @@ std::string TurbineEngine::engine()
            file << std::fixed << std::setw(8) << std::setprecision(4);
            file << (1.0f - 0.11*M*_bypass_ratio)*_milthrust_t[i][j];
         }
+        file << std::fixed << std::setw(3) << "0";
         file << std::endl;
     }
 
@@ -801,18 +801,18 @@ file << "<turboprop_engine name=\"" << _propulsion->_engine_name << "\">" << std
     file << "  <function name=\"EnginePowerVC\">" << std::endl;
     file << "    <table>" << std::endl;
     file << "      <description> Engine power, function of airspeed and pressure </description>" << std::endl;
-    file << "      <independentVar lookup=\"row\">atmosphere/P-sl-psf</independentVar>" << std::endl;
+    file << "      <independentVar lookup=\"row\">atmosphere/P-psf</independentVar>" << std::endl;
     file << "      <independentVar lookup=\"column\">velocities/ve-kts</independentVar>" << std::endl;
     file << "      <tableData>" << std::endl;
-    file << "              0      50    100    150    200    250" << std::endl;
-    file << "        503   0.357  0.380  0.400  0.425  0.457  0.486" << std::endl;
-    file << "       1048   0.586  0.589  0.600  0.621  0.650  0.686" << std::endl;
-    file << "       1328   0.707  0.721  0.731  0.757  0.786  0.821" << std::endl;
-    file << "       1496   0.779  0.786  0.808  0.821  0.857  0.900" << std::endl;
-    file << "       1684   0.850  0.857  0.874  0.900  0.943  0.979" << std::endl;
-    file << "       1896   0.914  0.929  0.946  0.971  1      1.057" << std::endl;
-    file << "       2135   1      1.011  1.029  1.043  1.083  1.150" << std::endl;
-    file << "       2213   1.029  1.043  1.057  1.079  1.114  1.171" << std::endl;
+    file << "              0      50     100    150    200    250    300    350" << std::endl;
+    file << "        503   0.357  0.380  0.400  0.425  0.457  0.486  0.517  0.550" << std::endl;
+    file << "       1048   0.586  0.589  0.600  0.621  0.650  0.686  0.724  0.764"<< std::endl;
+    file << "       1328   0.707  0.721  0.731  0.757  0.786  0.821  0.858  0.896" << std::endl;
+    file << "       1496   0.779  0.786  0.808  0.821  0.857  0.900  0.945  0.993" << std::endl;
+    file << "       1684   0.850  0.857  0.874  0.900  0.943  0.979  1.016  1.055" << std::endl;
+    file << "       1896   0.914  0.929  0.946  0.971  1      1.057  1.117  1.181" << std::endl;
+    file << "       2135   1      1.011  1.029  1.043  1.083  1.150  1.221  1.297" << std::endl;
+    file << "       2213   1.029  1.043  1.057  1.079  1.114  1.171  1.231  1.294" << std::endl;
     file << "     </tableData>" << std::endl;
     file << "   </table>" << std::endl;
     file << "  </function>" << std::endl;
@@ -941,14 +941,14 @@ std::string ElectricEngine::engine()
 
 float const TurbineEngine::_milthrust_t[8][8] =
 {
-   { 1.2600f, 1.0000f, 0.7400f, 0.5340f, 0.3720f, 0.2410f, 0.1490f, 0.0f, },
-   { 1.1710f, 0.9340f, 0.6970f, 0.5060f, 0.3550f, 0.2310f, 0.1430f, 0.0f, },
-   { 1.1500f, 0.9210f, 0.6920f, 0.5060f, 0.3570f, 0.2330f, 0.1450f, 0.0f, },
-   { 1.1810f, 0.9510f, 0.7210f, 0.5320f, 0.3780f, 0.2480f, 0.1540f, 0.0f, },
-   { 1.2580f, 1.0200f, 0.7820f, 0.5820f, 0.4170f, 0.2750f, 0.1700f, 0.0f, },
-   { 1.3690f, 1.1200f, 0.8710f, 0.6510f, 0.4750f, 0.3150f, 0.1950f, 0.0f, },
-   { 1.4850f, 1.2300f, 0.9750f, 0.7440f, 0.5450f, 0.3640f, 0.2250f, 0.0f, },
-   { 1.5941f, 1.3400f, 1.0860f, 0.8450f, 0.6280f, 0.4240f, 0.2630f, 0.0f, }
+   { 1.2600f, 1.0000f, 0.7400f, 0.5340f, 0.3720f, 0.2410f, 0.1490f, 0.058f },
+   { 1.1710f, 0.9340f, 0.6970f, 0.5060f, 0.3550f, 0.2310f, 0.1430f, 0.040f },
+   { 1.1500f, 0.9210f, 0.6920f, 0.5060f, 0.3570f, 0.2330f, 0.1450f, 0.043f },
+   { 1.1810f, 0.9510f, 0.7210f, 0.5320f, 0.3780f, 0.2480f, 0.1540f, 0.047f },
+   { 1.2580f, 1.0200f, 0.7820f, 0.5820f, 0.4170f, 0.2750f, 0.1700f, 0.053f },
+   { 1.3690f, 1.1200f, 0.8710f, 0.6510f, 0.4750f, 0.3150f, 0.1950f, 0.063f },
+   { 1.4850f, 1.2300f, 0.9750f, 0.7440f, 0.5450f, 0.3640f, 0.2250f, 0.074f },
+   { 1.5941f, 1.3400f, 1.0860f, 0.8450f, 0.6280f, 0.4240f, 0.2630f, 0.090f }
 };
 
 float const TurbopropEngine::_eng_pwr_t[6][13] =

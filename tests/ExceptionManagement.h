@@ -16,9 +16,8 @@
  * this program; if not, see <http://www.gnu.org/licenses/>
  */
 
-#include <exception>
 #include <string>
-#include "Python.h"
+#include "fpectlmodule.h"
 
 void convertJSBSimToPyExc()
 {
@@ -31,5 +30,8 @@ void convertJSBSimToPyExc()
   }
   catch (const char* msg) {
     PyErr_SetString(PyExc_RuntimeError, msg);
+  }
+  catch (const JSBSim::FloatingPointException& e) {
+    PyErr_SetString(e.getPyExc(), e.what());
   }
 }

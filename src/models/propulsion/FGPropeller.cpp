@@ -38,6 +38,7 @@ INCLUDES
 #include <iostream>
 #include <sstream>
 
+#include "FGFDMExec.h"
 #include "FGPropeller.h"
 #include "input_output/FGXMLElement.h"
 
@@ -45,7 +46,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.57 2016/01/02 17:42:53 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.63 2017/06/03 19:49:20 bcoconni Exp $");
 IDENT(IdHdr,ID_PROPELLER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,8 +81,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
     Ixx = max(prop_element->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2"), 0.001);
 
   Sense_multiplier = 1.0;
-  if (prop_element->HasAttribute("version"))
-    if  (prop_element->GetAttributeValueAsNumber("version") > 1.0)
+  if (prop_element->HasAttribute("version")
+      && prop_element->GetAttributeValueAsNumber("version") > 1.0)
       Sense_multiplier = -1.0;
 
   if (prop_element->FindElement("diameter"))
@@ -187,6 +188,14 @@ FGPropeller::~FGPropeller()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropeller::ResetToIC(void)
+{
+  FGThruster::ResetToIC();
+  Vinduced = 0.0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //
 // We must be getting the aerodynamic velocity here, NOT the inertial velocity.
 // We need the velocity with respect to the wind.
@@ -202,7 +211,7 @@ double FGPropeller::Calculate(double EnginePower)
   FGColumnVector3 localAeroVel = Transform().Transposed() * in.AeroUVW;
   double omega, PowerAvailable;
 
-  double Vel = localAeroVel(eU) + Vinduced;
+  double Vel = localAeroVel(eU);
   double rho = in.Density;
   double RPS = RPM/60.0;
 
@@ -211,10 +220,10 @@ double FGPropeller::Calculate(double EnginePower)
   double Vtip = RPS * Diameter * M_PI;
   HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / in.Soundspeed;
 
-  PowerAvailable = EnginePower - GetPowerRequired();
-
   if (RPS > 0.0) J = Vel / (Diameter * RPS); // Calculate J normally
   else           J = Vel / Diameter;
+
+  PowerAvailable = EnginePower - GetPowerRequired();
 
   if (MaxPitch == MinPitch) {    // Fixed pitch prop
     ThrustCoeff = cThrust->GetValue(J);
@@ -241,20 +250,6 @@ double FGPropeller::Calculate(double EnginePower)
     Vinduced = 0.5 * (-Vel + sqrt(Vel2sum));
   else
     Vinduced = 0.5 * (-Vel - sqrt(-Vel2sum));
-
-  // We need to drop the case where the downstream velocity is opposite in
-  // direction to the aircraft velocity. For example, in such a case, the
-  // direction of the airflow on the tail would be opposite to the airflow on
-  // the wing tips. When such complicated airflows occur, the momentum theory
-  // breaks down and the formulas above are no longer applicable
-  // (see H. Glauert, "The Elements of Airfoil and Airscrew Theory",
-  // 2nd edition, §16.3, pp. 219-221)
-
-  if ((Vel+2.0*Vinduced)*Vel < 0.0) {
-    // The momentum theory is no longer applicable so let's assume the induced
-    // saturates to -0.5*Vel so that the total velocity Vel+2*Vinduced equals 0.
-    Vinduced = -0.5*Vel;
-  }
     
   // P-factor is simulated by a shift of the acting location of the thrust.
   // The shift is a multiple of the angle between the propeller shaft axis
@@ -278,9 +273,7 @@ double FGPropeller::Calculate(double EnginePower)
   // natural axis of the engine. The transform takes place in the base class
   // FGForce::GetBodyForces() function.
 
-  vH(eX) = Ixx*omega*Sense*Sense_multiplier;
-  vH(eY) = 0.0;
-  vH(eZ) = 0.0;
+  FGColumnVector3 vH(Ixx*omega*Sense*Sense_multiplier, 0.0, 0.0);
 
   if (omega > 0.0) ExcessTorque = PowerAvailable / omega;
   else             ExcessTorque = PowerAvailable / 1.0;
@@ -291,7 +284,7 @@ double FGPropeller::Calculate(double EnginePower)
 
   // Transform Torque and momentum first, as PQR is used in this
   // equation and cannot be transformed itself.
-  vMn = in.PQR*(Transform()*vH) + Transform()*vTorque;
+  vMn = in.PQRi*(Transform()*vH) + Transform()*vTorque;
 
   return Thrust; // return thrust in pounds
 }
@@ -300,13 +293,7 @@ double FGPropeller::Calculate(double EnginePower)
 
 double FGPropeller::GetPowerRequired(void)
 {
-  double cPReq, J;
-  double rho = in.Density;
-  double Vel = in.AeroUVW(eU) + Vinduced;
-  double RPS = RPM / 60.0;
-
-  if (RPS != 0.0) J = Vel / (Diameter * RPS);
-  else            J = Vel / Diameter;
+  double cPReq;
 
   if (MaxPitch == MinPitch) {   // Fixed pitch prop
     cPReq = cPower->GetValue(J);
@@ -317,7 +304,7 @@ double FGPropeller::GetPowerRequired(void)
 
       // do normal calculation when propeller is neither feathered nor reversed
       // Note:  This method of feathering and reversing was added to support the
-      //        turboprop model.  It's left here for backward compatablity, but
+      //        turboprop model.  It's left here for backward compatiblity, but
       //        now feathering and reversing should be done in Manual Pitch Mode.
       if (!Feathered) {
         if (!Reversed) {
@@ -363,9 +350,10 @@ double FGPropeller::GetPowerRequired(void)
   // Apply optional Mach effects from CP_MACH table
   if (CpMach) cPReq *= CpMach->GetValue(HelicalTipMach);
 
+  double RPS = RPM / 60.0;
   double local_RPS = RPS < 0.01 ? 0.01 : RPS; 
 
-  PowerRequired = cPReq*local_RPS*local_RPS*local_RPS*D5*rho;
+  PowerRequired = cPReq*local_RPS*local_RPS*local_RPS*D5*in.Density;
   vTorque(eX) = -Sense*PowerRequired / (local_RPS*2.0*M_PI);
 
   return PowerRequired;

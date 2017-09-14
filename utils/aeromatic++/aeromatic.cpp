@@ -26,6 +26,12 @@
 #include "config.h"
 #endif
 
+#if defined(_MSC_VER)
+#  include <float.h>
+#elif defined(__GNUC__) && !defined(sgi)
+#  include <fenv.h>
+#endif
+
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -76,19 +82,24 @@ void ask(istream& in, ofstream& log, Aeromatic::Param* param)
     if (options) cout << endl;
 
     getline(in, input);
-    if (!input.empty())
+    if (!input.empty() && input[0] != ' ')
     {
         if (input == "?" || input == "h" || input == "help")
         {
             cout << param->help() << endl;
             getline(in, input);
         }
-        if (!input.empty()) {
+        if (!input.empty() && input[0] != ' ') {
             param->set(input);
         }
     }
     if (log.is_open()) {
-        log << input << endl;
+        log << input;
+        if (param->get_type() != Aeromatic::PARAM_STRING &&
+            param->get_type() != Aeromatic::PARAM_BOOL) {
+            log << std::setw(32-input.size()) << "; " << param->name();
+        }
+        log << endl;
     }
 }
 

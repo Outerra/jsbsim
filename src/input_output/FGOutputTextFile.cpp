@@ -64,7 +64,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGOutputTextFile.cpp,v 1.12 2016/05/22 10:28:23 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGOutputTextFile.cpp,v 1.13 2017/02/25 14:23:18 bcoconni Exp $");
 IDENT(IdHdr,ID_OUTPUTTEXTFILE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,7 +97,7 @@ bool FGOutputTextFile::OpenFile(void)
 {
   if (!datafile.is_open()) {
     datafile.clear();
-    datafile.open(Filename.c_str());
+  datafile.open(Filename);
   }
 
   if (!datafile) {
@@ -264,9 +264,9 @@ bool FGOutputTextFile::OpenFile(void)
 void FGOutputTextFile::Print(void)
 {
   streambuf* buffer;
-  string scratch = "";
+  string scratch = Filename.utf8Str();
 
-  if (Filename == "COUT" || Filename == "cout") {
+  if (to_upper(scratch) == "COUT") {
     buffer = cout.rdbuf();
   } else {
     buffer = datafile.rdbuf();

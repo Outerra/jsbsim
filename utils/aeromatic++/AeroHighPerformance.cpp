@@ -174,6 +174,11 @@ void Performance::set_yaw()
 
 // ----------------------------------------------------------------------------
 
+float const Performance::_fuselage_diameter_t[1][5] =
+{
+    { 2.75f, 3.25f, 3.75f, 4.25f, 4.5f }
+};
+
 float const Performance::_wing_loading_t[1][5] =
 {
     {  45.0f,  45.0f,  45.0f,  45.0f,  45.0f }

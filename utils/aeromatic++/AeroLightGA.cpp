@@ -173,6 +173,11 @@ void Light::set_yaw()
 
 // ----------------------------------------------------------------------------
 
+float const Light::_fuselage_diameter_t[1][5] =
+{
+    { 2.75f, 4.5f, 5.5f, 5.75f, 5.75f }
+};
+
 float const Light::_wing_loading_t[1][5] =
 {
     {   7.0f,  14.0f,  29.0f,  29.0f,  29.0f }

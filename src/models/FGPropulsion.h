@@ -52,7 +52,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPULSION "$Id: FGPropulsion.h,v 1.36 2016/05/05 15:38:08 bcoconni Exp $"
+#define ID_PROPULSION "$Id: FGPropulsion.h,v 1.37 2017/02/25 14:23:19 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -95,7 +95,7 @@ CLASS DOCUMENTATION
   @endcode
 
     @author Jon S. Berndt
-    @version $Id: FGPropulsion.h,v 1.36 2016/05/05 15:38:08 bcoconni Exp $
+    @version $Id: FGPropulsion.h,v 1.37 2017/02/25 14:23:19 bcoconni Exp $
     @see
     FGEngine
     FGTank
@@ -182,7 +182,7 @@ public:
   const FGColumnVector3& GetTanksMoment(void);
   double GetTanksWeight(void) const;
 
-  std::string FindFullPathName(const std::string& filename) const;
+  SGPath FindFullPathName(const SGPath& path) const;
   inline int GetActiveEngine(void) const {return ActiveEngine;}
   inline bool GetFuelFreeze(void) const {return FuelFreeze;}
 

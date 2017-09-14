@@ -55,7 +55,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ENGINE "$Id: FGEngine.h,v 1.47 2015/09/27 10:16:57 bcoconni Exp $"
+#define ID_ENGINE "$Id: FGEngine.h,v 1.48 2017/03/03 23:00:39 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -113,7 +113,7 @@ CLASS DOCUMENTATION
   documentation for engine and thruster classes.
 </pre>     
     @author Jon S. Berndt
-    @version $Id: FGEngine.h,v 1.47 2015/09/27 10:16:57 bcoconni Exp $
+    @version $Id: FGEngine.h,v 1.48 2017/03/03 23:00:39 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,7 +140,7 @@ public:
     double H_agl;
     FGColumnVector3 AeroUVW;
     FGColumnVector3 AeroPQR;
-    FGColumnVector3 PQR;
+    FGColumnVector3 PQRi;
     std::vector <double> ThrottleCmd;
     std::vector <double> MixtureCmd;
     std::vector <double> ThrottlePos;

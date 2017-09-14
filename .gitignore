@@ -31,6 +31,7 @@ src/.libs/
 *.diff
 *.png
 *.catalog
+TAGS
 *.opensdf
 *.sdf
 *.suo

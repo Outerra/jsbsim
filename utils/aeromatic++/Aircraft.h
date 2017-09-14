@@ -48,6 +48,8 @@ public:
         return _description;
     };
 
+    const char* get_verbose_description(int no_engines = -1);
+
     const std::vector<std::string> get_subclasses() {
         return _subclasses;
     }
@@ -56,6 +58,7 @@ public:
         return _systems;
     }
 
+    virtual float get_fuselage_diameter() { return 0.0f; }
     virtual float get_wing_loading() { return 0.0f; }
     virtual float get_aspect_ratio() { return 0.0f; }
     virtual float get_htail_area() { return 0.0f; }
@@ -108,6 +111,9 @@ public:
     Light(Aeromatic *p);
     ~Light() {}
 
+    float get_fuselage_diameter() {
+        return _fuselage_diameter_t[_subtype][_engines];
+    }
     float get_wing_loading() {
         return _wing_loading_t[_subtype][_engines];
     }
@@ -150,6 +156,7 @@ public:
     void set_yaw();
 
 protected:
+    static float const _fuselage_diameter_t[1][5];
     static float const _wing_loading_t[1][5];
     static float const _aspect_ratio_t[1][5];
     static float const _htail_area_t[1][5];
@@ -186,6 +193,9 @@ public:
     Performance(Aeromatic *p);
     ~Performance() {}
 
+    float get_fuselage_diameter() {
+        return _fuselage_diameter_t[_subtype][_engines];
+    }
     float get_wing_loading() {
         return _wing_loading_t[_subtype][_engines];
     }
@@ -228,6 +238,7 @@ public:
     void set_yaw();
 
 protected:
+    static float const _fuselage_diameter_t[1][5];
     static float const _wing_loading_t[1][5];
     static float const _aspect_ratio_t[1][5];
     static float const _htail_area_t[1][5];
@@ -264,6 +275,9 @@ public:
     Fighter(Aeromatic *p);
     ~Fighter() {}
 
+    float get_fuselage_diameter() {
+        return _fuselage_diameter_t[_subtype][_engines];
+    }
     float get_wing_loading() {
         return _wing_loading_t[_subtype][_engines];
     }
@@ -306,6 +320,7 @@ public:
     void set_yaw();
 
 protected:
+    static float const _fuselage_diameter_t[1][5];
     static float const _wing_loading_t[1][5];
     static float const _aspect_ratio_t[1][5];
     static float const _htail_area_t[1][5];
@@ -342,6 +357,9 @@ public:
     JetTransport(Aeromatic *p);
     ~JetTransport() {}
 
+    float get_fuselage_diameter() {
+        return _fuselage_diameter_t[_subtype][_engines];
+    }
     float get_wing_loading() {
         return _wing_loading_t[_subtype][_engines];
     }
@@ -384,6 +402,7 @@ public:
     void set_yaw();
 
 protected:
+    static float const _fuselage_diameter_t[1][5];
     static float const _wing_loading_t[1][5];
     static float const _aspect_ratio_t[1][5];
     static float const _htail_area_t[1][5];
@@ -420,6 +439,9 @@ public:
     PropTransport(Aeromatic *p);
     ~PropTransport() {}
 
+    float get_fuselage_diameter() {
+        return _fuselage_diameter_t[_subtype][_engines];
+    }
     float get_wing_loading() {
         return _wing_loading_t[_subtype][_engines];
     }
@@ -462,6 +484,7 @@ public:
     void set_yaw();
 
 protected:
+    static float const _fuselage_diameter_t[1][5];
     static float const _wing_loading_t[1][5];
     static float const _aspect_ratio_t[1][5];
     static float const _htail_area_t[1][5];
@@ -507,6 +530,9 @@ public:
 
     bool fdm();
 
+    float get_fuselage_diameter() {
+        return _aircraft[_atype]->get_fuselage_diameter();
+    }
     float get_wing_loading() {
         return _aircraft[_atype]->get_wing_loading();
     }
@@ -662,7 +688,7 @@ public:
 
     float _Cmalpha, _Cmde, _Cmq, _Cmadot;
 
-    std::vector<float> _Cnp;
+    std::vector<float> _Cna, _Cnp;
     float _Cnbeta, _Cnr, _Cndr, _Cnda;
 
 public:

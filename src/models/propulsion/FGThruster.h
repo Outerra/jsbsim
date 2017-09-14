@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_THRUSTER "$Id: FGThruster.h,v 1.26 2015/09/27 10:03:53 bcoconni Exp $"
+#define ID_THRUSTER "$Id: FGThruster.h,v 1.27 2017/03/03 23:00:39 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -76,7 +76,7 @@ CLASS DOCUMENTATION
     1.57 (pi/2) results in no thrust at all.
  
     @author Jon Berndt
-    @version $Id: FGThruster.h,v 1.26 2015/09/27 10:03:53 bcoconni Exp $
+    @version $Id: FGThruster.h,v 1.27 2017/03/03 23:00:39 bcoconni Exp $
     */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +118,7 @@ public:
   struct Inputs {
     double TotalDeltaT;
     double H_agl;
-    FGColumnVector3 PQR;
+    FGColumnVector3 PQRi;
     FGColumnVector3 AeroPQR;
     FGColumnVector3 AeroUVW;
     double Density;

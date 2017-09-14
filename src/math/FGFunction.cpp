@@ -44,7 +44,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGFunction.cpp,v 1.58 2015/07/12 19:34:08 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGFunction.cpp,v 1.59 2017/03/11 19:31:47 bcoconni Exp $");
 IDENT(IdHdr,ID_FUNCTION);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -267,7 +267,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     } else if (operation == value_string || operation == v_string) {
       Parameters.push_back(new FGRealValue(element->GetDataAsNumber()));
     } else if (operation == table_string || operation == t_string) {
-      Parameters.push_back(new FGTable(PropertyManager, element));
+      Parameters.push_back(new FGTable(PropertyManager, element, Prefix));
     // operations
     } else if (operation == product_string ||
                operation == difference_string ||
@@ -324,7 +324,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     element = el->GetNextElement();
   }
 
-  bind(); // Allow any function to save its value
+  bind(el); // Allow any function to save its value
 
   Debug(0);
 }
@@ -795,7 +795,7 @@ string FGFunction::GetValueAsString(void) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFunction::bind(void)
+void FGFunction::bind(Element* el)
 {
   if ( !Name.empty() ) {
     string tmp;
@@ -807,9 +807,10 @@ void FGFunction::bind(void)
           Name = replace(Name,"#",Prefix);
           tmp  = PropertyManager->mkPropertyName(Name, false);
         } else {
-          cerr << "Malformed function name with number: " << Prefix
-            << " and property name: " << Name
-            << " but no \"#\" sign for substitution." << endl;
+          cerr << el->ReadFrom()
+               << "Malformed function name with number: " << Prefix
+               << " and property name: " << Name
+               << " but no \"#\" sign for substitution." << endl;
         }
       } else {
         tmp  = PropertyManager->mkPropertyName(Prefix + "/" + Name, false);
@@ -819,7 +820,8 @@ void FGFunction::bind(void)
     if (PropertyManager->HasNode(tmp)) {
       FGPropertyNode* _property = PropertyManager->GetNode(tmp);
       if (_property->isTied()) {
-      cout << "Property " << tmp << " has already been successfully bound (late)." << endl;
+        cerr << el->ReadFrom()
+             << "Property " << tmp << " has already been successfully bound (late)." << endl;
         throw("Failed to bind the property to an existing already tied node.");
       }
     }

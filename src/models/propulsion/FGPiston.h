@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PISTON "$Id: FGPiston.h,v 1.38 2016/01/02 17:42:53 bcoconni Exp $"
+#define ID_PISTON "$Id: FGPiston.h,v 1.39 2017/04/29 11:16:46 ehofman Exp $"
 #define FG_MAX_BOOST_SPEEDS 3
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,6 +108,10 @@ CLASS DOCUMENTATION
   <ratedrpm3> {number} </ratedrpm3>
   <ratedaltitude3 unit="{FT | M}"> {number} </ratedaltitude3>
   <takeoffboost unit="{INHG | PA | ATM}"> {number} </takeoffboost>
+  <oil-pressure-relief-valve-psi> {number} </oil-pressure-relief-valve=psi>
+  <design-oil-temp-degK>  {number} </design-oil-temp-degK>
+  <oil-pressure-rpm-max> {number} </oil-pressure-rpm-max>
+  <oil-viscosity-index> {number} </oil-viscosity-index>
 </piston_engine>
 @endcode
 
@@ -213,7 +217,7 @@ boostspeed they refer to:
     @author David Megginson (initial porting and additional code)
     @author Ron Jensen (additional engine code)
     @see Taylor, Charles Fayette, "The Internal Combustion Engine in Theory and Practice"
-    @version $Id: FGPiston.h,v 1.38 2016/01/02 17:42:53 bcoconni Exp $
+    @version $Id: FGPiston.h,v 1.39 2017/04/29 11:16:46 ehofman Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -362,6 +366,11 @@ private:
   bool Magneto_Left;
   bool Magneto_Right;
   int Magnetos;
+
+  double Oil_Press_Relief_Valve;
+  double Oil_Press_RPM_Max;
+  double Design_Oil_Temp;         // degK
+  double Oil_Viscosity_Index;
 
   //
   // Outputs (in addition to those in FGEngine).

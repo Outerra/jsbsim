@@ -57,7 +57,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFDMExec.h"
 #include "FGJSBBase.h"
 #include "math/FGMatrix33.h"
 #include "math/FGColumnVector3.h"
@@ -68,13 +67,15 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FORCE "$Id: FGForce.h,v 1.17 2012/04/01 17:05:51 bcoconni Exp $"
+#define ID_FORCE "$Id: FGForce.h,v 1.19 2017/06/03 19:49:20 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class FGFDMExec;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -217,7 +218,7 @@ and vMn, the moments, can be made directly. Otherwise, the usage is similar.<br>
 <br><br></p>
 
     @author Tony Peden
-    @version $Id: FGForce.h,v 1.17 2012/04/01 17:05:51 bcoconni Exp $
+    @version $Id: FGForce.h,v 1.19 2017/06/03 19:49:20 bcoconni Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,12 +230,8 @@ class JSBSIM_API FGForce : public FGJSBBase
 public:
   /// Constructor
   FGForce(FGFDMExec *FDMExec);
-  FGForce(const FGForce& force) {
-    vFn = force.vFn;
-    vXYZn = force.vXYZn;
-    ttype = force.ttype;
-    fdmex = force.fdmex;
-  }
+  FGForce(const FGForce& force);
+
   /// Destructor
   ~FGForce();
 
@@ -318,7 +315,6 @@ protected:
   FGFDMExec *fdmex;
   FGColumnVector3 vFn;
   FGColumnVector3 vMn;
-  FGColumnVector3 vH;
   FGColumnVector3 vOrient;
   TransformType ttype;
   FGColumnVector3 vXYZn;
@@ -328,7 +324,6 @@ protected:
 private:
   FGColumnVector3 vFb;
   FGColumnVector3 vM;
-  FGColumnVector3 vDXYZ;
 
   void Debug(int from);
 };

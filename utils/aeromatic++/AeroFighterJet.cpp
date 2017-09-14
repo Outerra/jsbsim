@@ -173,6 +173,11 @@ void Fighter::set_yaw()
 
 // ----------------------------------------------------------------------------
 
+float const Fighter::_fuselage_diameter_t[1][5] =
+{
+    { 2.75f, 3.85f, 4.5f, 4.75f, 5.25f }
+};
+
 float const Fighter::_wing_loading_t[1][5] =
 {
     {  95.0f,  95.0f, 100.0f, 100.0f, 100.0f }

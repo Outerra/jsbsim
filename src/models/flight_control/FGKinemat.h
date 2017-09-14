@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FLAPS "$Id: FGKinemat.h,v 1.11 2015/03/28 14:49:02 bcoconni Exp $"
+#define ID_FLAPS "$Id: FGKinemat.h,v 1.13 2016/07/09 11:35:39 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -58,14 +58,16 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Encapsulates a kinematic (mechanical) component for the flight control system.
-This component models the action of a moving effector, such as an aerosurface or
-other mechanized entity such as a landing gear strut for the purpose of effecting
-vehicle control or configuration. The form of the component specification is:
+/** Encapsulates a kinematic (mechanical) component for the flight control
+system.  This component models the action of a moving effector, such as an
+aerosurface or other mechanized entity such as a landing gear strut for the
+purpose of effecting vehicle control or configuration. The form of the component
+specification is:
 
 @code
 <kinematic name="Gear Control">
   <input> [-]property </input>
+  [<noscale/>]
   <traverse>
     <setting>
       <position> number </position>
@@ -104,6 +106,13 @@ takes to get to that position from an adjacent setting. For example:
 
 In this case, it takes 5 seconds to get to a 1 setting. As this is a software
 mechanization of a servo-actuator, there should be an output specified.
+
+Positions must be given in ascending order.
+
+By default, the input is assumed to be in the range [-1;1] and is scaled to the
+value specified in the last <position> tag. This behavior can be modified by
+adding a <noscale/> tag to the component definition: in that case, the input
+value is directly used to determine the current position of the component.
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,7 +132,8 @@ public:
 
   /** Kinematic component output value.
       @return the current output of the kinematic object on the range of [0,1]. */
-  double GetOutputPct() const { return OutputPct; }
+  double GetOutputPct() const
+  { return (Output-Detents[0])/(Detents.back()-Detents[0]); }
 
   /** Run method, overrides FGModel::Run().
       @return false on success, true on failure.
@@ -133,8 +143,6 @@ public:
 private:
   std::vector<double> Detents;
   std::vector<double> TransitionTimes;
-  size_t NumDetents;
-  double OutputPct;
   bool  DoScale;
 
   void Debug(int from);

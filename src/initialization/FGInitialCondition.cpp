@@ -58,7 +58,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.107 2016/01/24 18:18:38 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGInitialCondition.cpp,v 1.114 2017/02/25 14:23:18 bcoconni Exp $");
 IDENT(IdHdr,ID_INITIALCONDITION);
 
 //******************************************************************************
@@ -104,6 +104,8 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
   position.SetLongitude(lonRad0);
   position.SetLatitude(latRad0);
   position.SetAltitudeAGL(altAGLFt0);
+  lastLatitudeSet = setgeoc;
+  lastAltitudeSet = setagl;
 
   orientation = FGQuaternion(phi0, theta0, psi0);
   const FGMatrix33& Tb2l = orientation.GetTInv();
@@ -125,8 +127,12 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
 void FGInitialCondition::InitializeIC(void)
 {
   alpha=beta=0;
+  a = fdmex->GetInertial()->GetSemimajor();
+  double b = fdmex->GetInertial()->GetSemiminor();
+  double ec = b/a;
+  e2 = 1.0 - ec*ec;
 
-  position.SetEllipse(fdmex->GetInertial()->GetSemimajor(), fdmex->GetInertial()->GetSemiminor());
+  position.SetEllipse(a, b);
 
   position.SetPositionGeodetic(0.0, 0.0, 0.0);
   position.SetEarthPositionAngle(fdmex->GetPropagate()->GetEarthPositionAngle());
@@ -143,6 +149,7 @@ void FGInitialCondition::InitializeIC(void)
 
   lastSpeedSet = setvt;
   lastAltitudeSet = setasl;
+  lastLatitudeSet = setgeoc;
   enginesRunning = 0;
   needTrim = 0;
 }
@@ -696,9 +703,16 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
   double mach0 = vt / soundSpeed;
   double vc0 = VcalibratedFromMach(mach0, pressure, pressureSL, rhoSL);
   double ve0 = vt * sqrt(rho/rhoSL);
+  double PitotAngle = Aircraft->GetPitotAngle();
 
+  double geodLatitude = position.GetGeodLatitudeRad();
   altitudeASL=alt;
   position.SetAltitudeASL(alt);
+
+  // The call to SetAltitudeASL has most likely modified the geodetic latitude
+  // so we need to restore it to its initial value.
+  if (lastLatitudeSet == setgeod)
+    SetGeodLatitudeRadIC(geodLatitude);
 
   soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   rho = Atmosphere->GetDensity(altitudeASL);
@@ -706,8 +720,9 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 
   switch(lastSpeedSet) {
     case setvc:
-      mach0 = MachFromVcalibrated(vc0, pressure, pressureSL, rhoSL);
-      SetVtrueFpsIC(mach0 * soundSpeed);
+      mach0 = MachFromVcalibrated(vc0 * cos(alpha+PitotAngle) * cos(beta),
+                                  pressure, pressureSL, rhoSL);
+      SetVtrueFpsIC(mach0 * soundSpeed / (cos(alpha+PitotAngle) * cos(beta)));
       break;
     case setmach:
       SetVtrueFpsIC(mach0 * soundSpeed);
@@ -724,9 +739,22 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 
 //******************************************************************************
 
+void FGInitialCondition::SetGeodLatitudeRadIC(double geodLatitude)
+{
+  double h = ComputeGeodAltitude(geodLatitude);
+  double lon = position.GetLongitude();
+
+  position.SetPositionGeodetic(lon, geodLatitude, h);
+  lastLatitudeSet = setgeod;
+}
+
+//******************************************************************************
+
 void FGInitialCondition::SetLatitudeRadIC(double lat)
 {
   double altitude;
+
+  lastLatitudeSet = setgeoc;
 
   switch(lastAltitudeSet) {
   case setagl:
@@ -735,9 +763,8 @@ void FGInitialCondition::SetLatitudeRadIC(double lat)
     SetAltitudeAGLFtIC(altitude);
     break;
   default:
-    altitude = position.GetAltitudeASL();
     position.SetLatitude(lat);
-    position.SetAltitudeASL(altitude);
+    break;
   }
 }
 
@@ -853,11 +880,11 @@ double FGInitialCondition::GetBodyVelFpsIC(int idx) const
 
 //******************************************************************************
 
-bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
+bool FGInitialCondition::Load(const SGPath& rstfile, bool useStoredPath)
 {
-  string init_file_name;
-  if( useStoredPath ) {
-    init_file_name = fdmex->GetFullAircraftPath() + "/" + rstfile + ".xml";
+  SGPath init_file_name;
+  if(useStoredPath && rstfile.isRelative()) {
+    init_file_name = fdmex->GetFullAircraftPath()/rstfile.utf8Str();
   } else {
     init_file_name = rstfile;
   }
@@ -904,6 +931,60 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 }
 
 //******************************************************************************
+// Given an altitude above the mean sea level (or a position radius which is the
+// same) and a geodetic latitude, compute the geodetic altitude.
+//
+// TODO: extend the routine to the case where lastAltitudeSet is equal to
+// setagl.
+
+double FGInitialCondition::ComputeGeodAltitude(double geodLatitude)
+{
+  double R = position.GetRadius();
+  double slat = sin(geodLatitude);
+  double RN = a / sqrt(1.0 - e2*slat*slat);
+  double p1 = e2*RN*slat*slat;
+  double p2 = e2*e2*RN*RN*slat*slat-R*R;
+  return p1 + sqrt(p1*p1-p2) - RN;
+}
+
+//******************************************************************************
+
+bool FGInitialCondition::LoadLatitude(Element* position_el)
+{
+  Element* latitude_el = position_el->FindElement("latitude");
+
+  if (latitude_el) {
+    double latitude = position_el->FindElementValueAsNumberConvertTo("latitude", "RAD");
+
+    if (fabs(latitude) > 0.5*M_PI) {
+      string unit_type = latitude_el->GetAttributeValue("unit");
+      if (unit_type.empty()) unit_type="RAD";
+
+      cerr << latitude_el->ReadFrom() << "The latitude value "
+           << latitude_el->GetDataAsNumber() << " " << unit_type
+           << " is outside the range [";
+      if (unit_type == "DEG")
+        cerr << "-90 DEG ; +90 DEG]" << endl;
+      else
+        cerr << "-PI/2 RAD; +PI/2 RAD]" << endl;
+
+      return false;
+    }
+
+    string lat_type = latitude_el->GetAttributeValue("type");
+
+    if (lat_type == "geod" || lat_type == "geodetic")
+      SetGeodLatitudeRadIC(latitude);
+    else {
+      position.SetLatitude(latitude);
+      lastLatitudeSet = setgeoc;
+  }
+  }
+
+  return true;
+}
+
+//******************************************************************************
 
 bool FGInitialCondition::Load_v1(Element* document)
 {
@@ -921,31 +1002,7 @@ bool FGInitialCondition::Load_v1(Element* document)
   else if (document->FindElement("altitudeMSL")) // This is feet above sea level
     SetAltitudeASLFtIC(document->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
 
-  double altitude = GetAltitudeASLFtIC();
-  double longitude = GetLongitudeRadIC();
-
-  Element* latitude_el = document->FindElement("latitude");
-  if (latitude_el) {
-    double latitude = document->FindElementValueAsNumberConvertTo("latitude", "RAD");
-    if (fabs(latitude) > 0.5*M_PI) {
-      string unit_type = latitude_el->GetAttributeValue("unit");
-      if (unit_type.empty()) unit_type="RAD";
-      cerr << latitude_el->ReadFrom() << "The latitude value "
-           << latitude_el->GetDataAsNumber() << " " << unit_type
-           << " is outside the range [";
-      if (unit_type == "DEG")
-        cerr << "-90 DEG ; +90 DEG]" << endl;
-      else
-        cerr << "-PI/2 RAD; +PI/2 RAD]" << endl;
-      result = false;
-    }
-
-    string lat_type = latitude_el->GetAttributeValue("type");
-    if (lat_type == "geod" || lat_type == "geodetic")
-      position.SetPositionGeodetic(longitude, latitude, altitude); // Longitude and altitude will be set later on
-    else
-      position.SetLatitude(latitude);
-  }
+  result = LoadLatitude(document);
 
   FGColumnVector3 vOrient = orientation.GetEuler();
 
@@ -995,9 +1052,7 @@ bool FGInitialCondition::Load_v1(Element* document)
   if (document->FindElement("xwind"))
     SetCrossWindKtsIC(document->FindElementValueAsNumberConvertTo("xwind", "KTS"));
   if (document->FindElement("targetNlf"))
-  {
     SetTargetNlfIC(document->FindElementValueAsNumber("targetNlf"));
-  }
   if (document->FindElement("trim"))
     needTrim = document->FindElementValueAsNumber("trim");
 
@@ -1035,6 +1090,9 @@ bool FGInitialCondition::Load_v2(Element* document)
   }
   FGColumnVector3 vOmegaEarth = fdmex->GetInertial()->GetOmegaPlanet();
 
+  if (document->FindElement("elevation"))
+    fdmex->GetGroundCallback()->SetTerrainGeoCentRadius(document->FindElementValueAsNumberConvertTo("elevation", "FT")+position.GetSeaLevelRadius());
+
   // Initialize vehicle position
   //
   // Allowable frames:
@@ -1049,7 +1107,6 @@ bool FGInitialCondition::Load_v2(Element* document)
       position = position.GetTi2ec() * position_el->FindElementTripletConvertTo("FT");
     } else if (frame == "ecef") {
       if (!position_el->FindElement("x") && !position_el->FindElement("y") && !position_el->FindElement("z")) {
-        Element* latitude_el = position_el->FindElement("latitude");
         if (position_el->FindElement("longitude"))
           position.SetLongitude(position_el->FindElementValueAsNumberConvertTo("longitude", "RAD"));
 
@@ -1064,17 +1121,7 @@ bool FGInitialCondition::Load_v2(Element* document)
           result = false;
         }
 
-        double altitude = position.GetAltitudeASL();
-        double longitude = position.GetLongitude();
-
-        if (latitude_el) {
-          string lat_type = latitude_el->GetAttributeValue("type");
-          double latitude = position_el->FindElementValueAsNumberConvertTo("latitude", "RAD");
-          if (lat_type == "geod" || lat_type == "geodetic")
-            position.SetPositionGeodetic(longitude, latitude, altitude);
-          else
-            position.SetLatitude(latitude);
-        }
+        result = LoadLatitude(position_el);
 
       } else {
         position = position_el->FindElementTripletConvertTo("FT");
@@ -1087,9 +1134,6 @@ bool FGInitialCondition::Load_v2(Element* document)
     cerr << endl << "  Initial position not specified in this initialization file." << endl;
     result = false;
   }
-
-  if (document->FindElement("elevation"))
-    fdmex->GetGroundCallback()->SetTerrainGeoCentRadius(document->FindElementValueAsNumberConvertTo("elevation", "FT")+position.GetSeaLevelRadius());
 
   // End of position initialization
 
@@ -1439,10 +1483,14 @@ void FGInitialCondition::bind(FGPropertyManager* PropertyManager)
                        &FGInitialCondition::GetRRadpsIC,
                        &FGInitialCondition::SetRRadpsIC,
                        true);
-  PropertyManager->Tie("ic/lat-geod-rad", &position,
-                       &FGLocation::GetGeodLatitudeRad);
-  PropertyManager->Tie("ic/lat-geod-deg", &position,
-                       &FGLocation::GetGeodLatitudeDeg);
+  PropertyManager->Tie("ic/lat-geod-rad", this,
+                       &FGInitialCondition::GetGeodLatitudeRadIC,
+                       &FGInitialCondition::SetGeodLatitudeRadIC,
+                       true);
+  PropertyManager->Tie("ic/lat-geod-deg", this,
+                       &FGInitialCondition::GetGeodLatitudeDegIC,
+                       &FGInitialCondition::SetGeodLatitudeDegIC,
+                       true);
   PropertyManager->Tie("ic/geod-alt-ft", &position,
                        &FGLocation::GetGeodAltitude);
 }
