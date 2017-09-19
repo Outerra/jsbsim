@@ -14,16 +14,19 @@
     <ProjectGuid>{AF971B4F-3D53-4655-8A03-97E8054DC58B}</ProjectGuid>
     <RootNamespace>JSBSim</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>PGInstrument</WholeProgramOptimization>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -39,13 +42,14 @@
     <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>Debug\</OutDir>
-    <IntDir>Debug\</IntDir>
-    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\..\bin\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\out\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>Release\</OutDir>
-    <IntDir>Release\</IntDir>
+    <OutDir>$(SolutionDir)..\..\..\bin\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\out\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -53,27 +57,32 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;JSBSIM_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;JSBSIM_EXPORT;_DEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <FloatingPointModel>Precise</FloatingPointModel>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <PrecompiledHeader />
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <BrowseInformation>true</BrowseInformation>
+      <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4996;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4996;4267;4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <CompileAsManaged>false</CompileAsManaged>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <ShowProgress>LinkVerbose</ShowProgress>
       <Version>1.0</Version>
-      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(ProjectDir)..\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,29 +90,41 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)src\simgear\xml;C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;JSBSIM_EXPORT;NDEBUG;_CONSOLE;HAVE_EXPAT_CONFIG_H;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <PrecompiledHeader />
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>false</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <AdditionalOptions>/d2Zi+ %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4996;4267;4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <ShowProgress>LinkVerbose</ShowProgress>
-      <Version>0.9.13</Version>
-      <AdditionalLibraryDirectories>C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <Profile>true</Profile>
+      <ImportLibrary>$(ProjectDir)..\$(TargetName).lib</ImportLibrary>
     </Link>
+    <Manifest>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <VerboseOutput>true</VerboseOutput>
+    </Manifest>
     <Xdcmake>
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Xdcmake>
@@ -117,9 +138,19 @@
     <ClInclude Include="src\initialization\FGTrimAxis.h" />
     <ClInclude Include="src\input_output\FGfdmSocket.h" />
     <ClInclude Include="src\input_output\FGGroundCallback.h" />
+    <ClInclude Include="src\input_output\FGInputSocket.h" />
+    <ClInclude Include="src\input_output\FGInputType.h" />
+    <ClInclude Include="src\input_output\FGModelLoader.h" />
+    <ClInclude Include="src\input_output\FGOutputFG.h" />
+    <ClInclude Include="src\input_output\FGOutputFile.h" />
+    <ClInclude Include="src\input_output\FGOutputSocket.h" />
     <ClInclude Include="src\input_output\FGOutputTextFile.h" />
+    <ClInclude Include="src\input_output\FGOutputType.h" />
     <ClInclude Include="src\input_output\FGPropertyManager.h" />
+    <ClInclude Include="src\input_output\FGPropertyReader.h" />
     <ClInclude Include="src\input_output\FGScript.h" />
+    <ClInclude Include="src\input_output\FGUDPInputSocket.h" />
+    <ClInclude Include="src\input_output\FGUDPOutputSocket.h" />
     <ClInclude Include="src\input_output\FGXMLElement.h" />
     <ClInclude Include="src\input_output\FGXMLFileRead.h" />
     <ClInclude Include="src\input_output\FGXMLParse.h" />
@@ -162,7 +193,9 @@
     <ClInclude Include="src\models\FGSurface.h" />
     <ClInclude Include="src\models\flight_control\FGAccelerometer.h" />
     <ClInclude Include="src\models\flight_control\FGActuator.h" />
+    <ClInclude Include="src\models\flight_control\FGAngles.h" />
     <ClInclude Include="src\models\flight_control\FGDeadBand.h" />
+    <ClInclude Include="src\models\flight_control\FGDistributor.h" />
     <ClInclude Include="src\models\flight_control\FGFCSComponent.h" />
     <ClInclude Include="src\models\flight_control\FGFCSFunction.h" />
     <ClInclude Include="src\models\flight_control\FGFilter.h" />
@@ -175,6 +208,7 @@
     <ClInclude Include="src\models\flight_control\FGSensorOrientation.h" />
     <ClInclude Include="src\models\flight_control\FGSummer.h" />
     <ClInclude Include="src\models\flight_control\FGSwitch.h" />
+    <ClInclude Include="src\models\flight_control\FGWaypoint.h" />
     <ClInclude Include="src\models\propulsion\FGElectric.h" />
     <ClInclude Include="src\models\propulsion\FGEngine.h" />
     <ClInclude Include="src\models\propulsion\FGForce.h" />
@@ -193,6 +227,7 @@
     <ClInclude Include="src\simgear\magvar\coremag.hxx" />
     <ClInclude Include="src\simgear\misc\sg_path.hxx" />
     <ClInclude Include="src\simgear\misc\stdint.hxx" />
+    <ClInclude Include="src\simgear\misc\strutils.hxx" />
     <ClInclude Include="src\simgear\props\propertyObject.hxx" />
     <ClInclude Include="src\simgear\props\props.hxx" />
     <ClInclude Include="src\simgear\props\SGReferenced.hxx" />
@@ -222,9 +257,19 @@
     <ClCompile Include="src\initialization\FGTrimAxis.cpp" />
     <ClCompile Include="src\input_output\FGfdmSocket.cpp" />
     <ClCompile Include="src\input_output\FGGroundCallback.cpp" />
+    <ClCompile Include="src\input_output\FGInputSocket.cpp" />
+    <ClCompile Include="src\input_output\FGInputType.cpp" />
+    <ClCompile Include="src\input_output\FGModelLoader.cpp" />
+    <ClCompile Include="src\input_output\FGOutputFG.cpp" />
+    <ClCompile Include="src\input_output\FGOutputFile.cpp" />
+    <ClCompile Include="src\input_output\FGOutputSocket.cpp" />
     <ClCompile Include="src\input_output\FGOutputTextFile.cpp" />
+    <ClCompile Include="src\input_output\FGOutputType.cpp" />
     <ClCompile Include="src\input_output\FGPropertyManager.cpp" />
+    <ClCompile Include="src\input_output\FGPropertyReader.cpp" />
     <ClCompile Include="src\input_output\FGScript.cpp" />
+    <ClCompile Include="src\input_output\FGUDPInputSocket.cpp" />
+    <ClCompile Include="src\input_output\FGUDPOutputSocket.cpp" />
     <ClCompile Include="src\input_output\FGXMLElement.cpp" />
     <ClCompile Include="src\input_output\FGXMLParse.cpp" />
     <ClCompile Include="src\JSBSim.cpp" />
@@ -268,7 +313,9 @@
     <ClCompile Include="src\models\FGSurface.cpp" />
     <ClCompile Include="src\models\flight_control\FGAccelerometer.cpp" />
     <ClCompile Include="src\models\flight_control\FGActuator.cpp" />
+    <ClCompile Include="src\models\flight_control\FGAngles.cpp" />
     <ClCompile Include="src\models\flight_control\FGDeadBand.cpp" />
+    <ClCompile Include="src\models\flight_control\FGDistributor.cpp" />
     <ClCompile Include="src\models\flight_control\FGFCSComponent.cpp" />
     <ClCompile Include="src\models\flight_control\FGFCSFunction.cpp" />
     <ClCompile Include="src\models\flight_control\FGFilter.cpp" />
@@ -280,6 +327,7 @@
     <ClCompile Include="src\models\flight_control\FGSensor.cpp" />
     <ClCompile Include="src\models\flight_control\FGSummer.cpp" />
     <ClCompile Include="src\models\flight_control\FGSwitch.cpp" />
+    <ClCompile Include="src\models\flight_control\FGWaypoint.cpp" />
     <ClCompile Include="src\models\propulsion\FGElectric.cpp" />
     <ClCompile Include="src\models\propulsion\FGEngine.cpp" />
     <ClCompile Include="src\models\propulsion\FGForce.cpp" />
@@ -298,6 +346,7 @@
     <ClCompile Include="src\simgear\io\iostreams\sgstream.cxx" />
     <ClCompile Include="src\simgear\magvar\coremag.cxx" />
     <ClCompile Include="src\simgear\misc\sg_path.cxx" />
+    <ClCompile Include="src\simgear\misc\strutils.cxx" />
     <ClCompile Include="src\simgear\props\propertyObject.cxx" />
     <ClCompile Include="src\simgear\props\props.cxx" />
     <ClCompile Include="src\simgear\xml\easyxml.cxx" />

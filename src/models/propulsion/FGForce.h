@@ -230,7 +230,7 @@ class JSBSIM_API FGForce : public FGJSBBase
 public:
   /// Constructor
   FGForce(FGFDMExec *FDMExec);
-  FGForce(const FGForce& force);
+  //FGForce(const FGForce& force);
 
   /// Destructor
   ~FGForce();

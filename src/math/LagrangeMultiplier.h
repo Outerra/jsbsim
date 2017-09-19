@@ -57,6 +57,8 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 struct JSBSIM_API LagrangeMultiplier {
+  FGColumnVector3 TerrainLinearVelocity;
+  FGColumnVector3 TerrainAngularVelocity;
   FGColumnVector3 ForceJacobian;
   FGColumnVector3 MomentJacobian;
   double Min;

@@ -281,13 +281,9 @@ void FGAccelerations::ResolveFrictionForces(double dt)
 
   // Translation
   vdot = vUVWdot;
-  if (dt > 0.) // Zeroes out the relative movement between the aircraft and the ground
-    vdot += (in.vUVW - in.Tec2b * in.TerrainVelocity) / dt;
-
+  
   // Rotation
   wdot = vPQRdot;
-  if (dt > 0.) // Zeroes out the relative movement between the aircraft and the ground
-    wdot += (in.vPQR - in.Tec2b * in.TerrainAngularVel) / dt;
 
   // Prepare the linear system for the Gauss-Seidel algorithm :
   // 1. Compute the right hand side member 'rhs'
@@ -296,8 +292,9 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   for (unsigned int i=0; i < n; i++) {
     double d = 1.0 / a[i*n+i];
 
-    rhs[i] = -(DotProduct(multipliers[i]->ForceJacobian, vdot)
-              +DotProduct(multipliers[i]->MomentJacobian, wdot))*d;
+    rhs[i] = -(DotProduct(multipliers[i]->ForceJacobian,
+    (dt > 0.)? vdot + ((in.vUVW - in.Tec2b * multipliers[i]->TerrainLinearVelocity) / dt): vdot)
+              +DotProduct(multipliers[i]->MomentJacobian,(dt > 0.)?(wdot + (in.vPQR - in.Tec2b * multipliers[0]->TerrainAngularVelocity) / dt): wdot))*d;
     for (unsigned int j=0; j < n; j++)
       a[i*n+j] *= d;
   }

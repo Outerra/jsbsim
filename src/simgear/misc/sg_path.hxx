@@ -35,6 +35,8 @@
 #include <ctime>
 #include <vector>
 
+#include "JSBSim_api.h"
+
 #ifdef _MSC_VER
   typedef int mode_t;
 #endif
@@ -50,7 +52,7 @@ typedef string_list::iterator string_list_iterator;
  * automatically to the proper format.
  */
 
-class SGPath {
+class JSBSIM_API SGPath {
 
 public:
 

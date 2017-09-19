@@ -285,7 +285,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
   if (isRetractable) gearPos = GetGearUnitPos();
 
   if (gearPos > 0.99) { // Gear DOWN
-    FGColumnVector3 normal, terrainVel, dummy;
+    FGColumnVector3 normal, terrainVel, terrainVelAng;
     FGLocation gearLoc, contact;
     FGColumnVector3 vWhlBodyVec = Ts2b * (vXYZn - in.vXYZcg);
 
@@ -295,7 +295,15 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
     // Compute the height of the theoretical location of the wheel (if strut is
     // not compressed) with respect to the ground level
     const double maxdist = 20; //ft
-    double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, dummy);
+    double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, terrainVelAng);
+
+    LMultiplier[ftRoll].TerrainLinearVelocity = terrainVel;
+    LMultiplier[ftSide].TerrainLinearVelocity = terrainVel;
+    LMultiplier[ftDynamic].TerrainLinearVelocity = terrainVel;
+    LMultiplier[ftRoll].TerrainAngularVelocity = terrainVelAng;
+    LMultiplier[ftSide].TerrainAngularVelocity = terrainVelAng;
+    LMultiplier[ftDynamic].TerrainAngularVelocity = terrainVelAng;
+
 
     // Does this surface contact point interact with another surface?
     if (surface) {
