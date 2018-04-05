@@ -53,6 +53,7 @@ namespace JSBSim {
 
 class FGLocation;
 class FGColumnVector3;
+class FGMatrix33;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -97,7 +98,10 @@ public:
   virtual double GetAGLevel(double t, double maxdist, const FGLocation& location,
                             FGLocation& contact,
                             FGColumnVector3& normal, FGColumnVector3& v,
-                            FGColumnVector3& w) const = 0;
+                            FGColumnVector3& w,
+                            FGColumnVector3& ground_position,
+                            double& ground_mass_inverse,
+                            FGMatrix33& ground_j_inverse) const = 0;
 
   /** Compute the altitude above ground.
       The altitude depends on location l.
@@ -112,8 +116,13 @@ public:
   virtual double GetAGLevel(double maxdist,
                             const FGLocation& location, FGLocation& contact,
                             FGColumnVector3& normal, FGColumnVector3& v,
-                            FGColumnVector3& w) const
-  { return GetAGLevel(time, maxdist, location, contact, normal, v, w); }
+                            FGColumnVector3& w,
+                            FGColumnVector3& ground_position,
+                            double& ground_mass_inverse,
+                            FGMatrix33& ground_j_inverse) const
+  {
+      return GetAGLevel(time, maxdist, location, contact, normal, v, w, ground_position, ground_mass_inverse, ground_j_inverse);
+  }
 
   /** Compute the local terrain radius
       @param t simulation time
@@ -168,7 +177,10 @@ public:
    double GetAGLevel(double t, double maxdist, const FGLocation& location,
                      FGLocation& contact,
                      FGColumnVector3& normal, FGColumnVector3& v,
-                     FGColumnVector3& w) const;
+                     FGColumnVector3& w,
+                     FGColumnVector3& ground_position,
+                     double& ground_mass_inverse,
+                     FGMatrix33& ground_j_inverse) const;
 
    void SetTerrainGeoCentRadius(double radius)  {  mTerrainLevelRadius = radius;}
    double GetTerrainGeoCentRadius(double t, const FGLocation& location) const

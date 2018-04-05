@@ -42,6 +42,7 @@ INCLUDES
 
 #include <cstdlib>
 #include <cstring>
+#include <assert.h>
 
 #include "math/FGFunction.h"
 #include "FGLGear.h"
@@ -285,9 +286,11 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
   if (isRetractable) gearPos = GetGearUnitPos();
 
   if (gearPos > 0.99) { // Gear DOWN
-    FGColumnVector3 normal, terrainVel, terrainVelAng;
+    FGColumnVector3 normal, terrainVel, terrainVelAng,terrainPos;
     FGLocation gearLoc, contact;
     FGColumnVector3 vWhlBodyVec = Ts2b * (vXYZn - in.vXYZcg);
+    double terrainMassInv;
+    FGMatrix33 terrainJInv;
 
     vLocalGear = in.Tb2l * vWhlBodyVec; // Get local frame wheel location
     gearLoc = in.Location.LocalToLocation(vLocalGear);
@@ -295,7 +298,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
     // Compute the height of the theoretical location of the wheel (if strut is
     // not compressed) with respect to the ground level
     const double maxdist = 20; //ft
-    double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, terrainVelAng);
+    double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, terrainVelAng,terrainPos,terrainMassInv,terrainJInv);
 
     LMultiplier[ftRoll].TerrainLinearVelocity = terrainVel;
     LMultiplier[ftSide].TerrainLinearVelocity = terrainVel;
@@ -334,7 +337,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
       switch(eContactType) {
       case ctBOGEY:
         if (isSolid) {
-          compressLength = LGearProj > 0.0 ? height * normalZ / LGearProj : 0.0;
+          compressLength = height * normalZ * LGearProj;
           vWhlDisplVec = mTGear * FGColumnVector3(0., 0., -compressLength);
         } else {
           // Gears don't (or hardly) compress in liquids
@@ -368,7 +371,8 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
       else {
         compressSpeed = -vGroundWhlVel(eZ);
         if (eContactType == ctBOGEY)
-          compressSpeed /= LGearProj;
+          compressSpeed *= LGearProj;
+        assert(LGearProj != 0.0);
       }
 
       ComputeVerticalStrutForce();

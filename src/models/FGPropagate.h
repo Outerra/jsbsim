@@ -644,6 +644,10 @@ private:
   eIntegrateType integrator_rotational_position;
   eIntegrateType integrator_translational_position;
 
+  FGColumnVector3 TerrainPos;
+  double TerrainMassInv;
+  FGMatrix33 TerrainJInv;
+
   void CalculateInertialVelocity(void);
   void CalculateUVW(void);
   void CalculateQuatdot(void);

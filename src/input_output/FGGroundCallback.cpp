@@ -32,6 +32,7 @@ SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "math/FGColumnVector3.h"
+#include "math/FGMatrix33.h"
 #include "math/FGLocation.h"
 #include "FGGroundCallback.h"
 
@@ -56,7 +57,10 @@ double FGDefaultGroundCallback::GetAltitude(const FGLocation& loc) const
 
 double FGDefaultGroundCallback::GetAGLevel(double t, double maxdist, const FGLocation& loc,
                                     FGLocation& contact, FGColumnVector3& normal,
-                                    FGColumnVector3& vel, FGColumnVector3& angularVel) const
+                                    FGColumnVector3& vel, FGColumnVector3& angularVel,
+                                    FGColumnVector3& ground_position,
+                                    double& ground_mass_inverse,
+                                    FGMatrix33& ground_j_inverse) const
 {
   vel = FGColumnVector3(0.0, 0.0, 0.0);
   angularVel = FGColumnVector3(0.0, 0.0, 0.0);

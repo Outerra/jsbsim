@@ -366,8 +366,10 @@ public:
       @see SetGroundCallback */
   double GetAltitudeAGL(void) const {
     FGLocation c;
-    FGColumnVector3 n,v,w;
-    return GetContactPoint(GetRadius(),c,n,v,w);
+    FGColumnVector3 n,v,w,gp;
+    double m_inv;
+    FGMatrix33 gj_inv;
+    return GetContactPoint(GetRadius(),c,n,v,w,gp,m_inv,gj_inv);
   }
 
   /** Get terrain contact point information below the current location.
@@ -380,8 +382,12 @@ public:
       @see SetGroundCallback */
   double GetContactPoint(double maxdist,
                          FGLocation& contact, FGColumnVector3& normal,
-                         FGColumnVector3& v, FGColumnVector3& w) const
-  { ComputeDerived(); return GroundCallback->GetAGLevel(maxdist, *this, contact, normal, v, w); }
+                         FGColumnVector3& v, FGColumnVector3& w,
+                         FGColumnVector3& ground_position,
+                         double& ground_mass_inverse,
+                         FGMatrix33& ground_j_inverse
+      ) const
+  { ComputeDerived(); return GroundCallback->GetAGLevel(maxdist, *this, contact, normal, v, w, ground_position,ground_mass_inverse,ground_j_inverse); }
   ///@}
 
   /** Sets the ground callback pointer. The FGGroundCallback instance will be
