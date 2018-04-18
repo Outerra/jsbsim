@@ -267,8 +267,8 @@ void FGLGear::ResetToIC(void)
 
   // Initialize Lagrange multipliers
   for (int i=0; i < 3; i++) {
-    LMultiplier[i].ForceJacobian.InitMatrix();
-    LMultiplier[i].MomentJacobian.InitMatrix();
+//    LMultiplier[i].ForceJacobian.InitMatrix();
+//    LMultiplier[i].MomentJacobian.InitMatrix();
     LMultiplier[i].Min = 0.0;
     LMultiplier[i].Max = 0.0;
     LMultiplier[i].value = 0.0;
@@ -300,13 +300,19 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
     const double maxdist = 20; //ft
     double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, terrainVelAng,terrainPos,terrainMassInv,terrainJInv);
 
-    LMultiplier[ftRoll].TerrainLinearVelocity = terrainVel;
-    LMultiplier[ftSide].TerrainLinearVelocity = terrainVel;
-    LMultiplier[ftDynamic].TerrainLinearVelocity = terrainVel;
-    LMultiplier[ftRoll].TerrainAngularVelocity = terrainVelAng;
-    LMultiplier[ftSide].TerrainAngularVelocity = terrainVelAng;
-    LMultiplier[ftDynamic].TerrainAngularVelocity = terrainVelAng;
-
+	
+    LMultiplier[ftRoll].surface_linear_velocity = in.Tec2b * terrainVel;
+    LMultiplier[ftSide].surface_linear_velocity = LMultiplier[ftRoll].surface_linear_velocity;
+    LMultiplier[ftDynamic].surface_linear_velocity = LMultiplier[ftRoll].surface_linear_velocity;
+    LMultiplier[ftRoll].surface_angular_velocity = in.Tec2b * terrainVelAng;
+    LMultiplier[ftSide].surface_angular_velocity = LMultiplier[ftRoll].surface_angular_velocity;
+    LMultiplier[ftDynamic].surface_angular_velocity = LMultiplier[ftRoll].surface_angular_velocity;
+	LMultiplier[ftRoll].surface_inv_mass = terrainMassInv;
+	LMultiplier[ftSide].surface_inv_mass = terrainMassInv;
+	LMultiplier[ftDynamic].surface_inv_mass = terrainMassInv;
+	LMultiplier[ftRoll].surface_inv_J = terrainJInv;
+	LMultiplier[ftSide].surface_inv_J = terrainJInv;
+	LMultiplier[ftDynamic].surface_inv_J = terrainJInv;
 
     // Does this surface contact point interact with another surface?
     if (surface) {
@@ -386,7 +392,7 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
 
       // Prepare the Jacobians and the Lagrange multipliers for later friction
       // forces calculations.
-      ComputeJacobian(vWhlContactVec);
+      ComputeJacobian(vWhlContactVec, in.Tec2b * (contact - terrainPos));
     } else { // Gear is NOT compressed
       compressLength = 0.0;
       compressSpeed = 0.0;
@@ -676,7 +682,7 @@ double FGLGear::GetGearUnitPos(void) const
 // Compute the jacobian entries for the friction forces resolution later
 // in FGPropagate
 
-void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec)
+void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec, const FGColumnVector3& vTerrainContactVec)
 {
   // When the point of contact is moving, dynamic friction is used
   // This type of friction is limited to ctSTRUCTURE elements because their
@@ -690,8 +696,10 @@ void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec)
     velocityDirection(eZ) = 0.;
     velocityDirection.Normalize();
 
-    LMultiplier[ftDynamic].ForceJacobian = mT * velocityDirection;
-    LMultiplier[ftDynamic].MomentJacobian = vWhlContactVec * LMultiplier[ftDynamic].ForceJacobian;
+    LMultiplier[ftDynamic].jac2 = mT * velocityDirection;
+    LMultiplier[ftDynamic].jac3 = vTerrainContactVec * LMultiplier[ftDynamic].jac2 ;
+    LMultiplier[ftDynamic].jac0 = -1.0 * LMultiplier[ftDynamic].jac2;
+    LMultiplier[ftDynamic].jac1 = vWhlContactVec * LMultiplier[ftDynamic].jac0;
     LMultiplier[ftDynamic].Max = 0.;
     LMultiplier[ftDynamic].Min = -fabs(staticFFactor * dynamicFCoeff * vFn(eZ));
 
@@ -710,11 +718,17 @@ void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec)
     // This cannot be handled properly by the so-called "dynamic friction".
     StaticFriction = true;
 
-    LMultiplier[ftRoll].ForceJacobian = mT * FGColumnVector3(1.,0.,0.);
-    LMultiplier[ftSide].ForceJacobian = mT * FGColumnVector3(0.,1.,0.);
-    LMultiplier[ftRoll].MomentJacobian = vWhlContactVec * LMultiplier[ftRoll].ForceJacobian;
-    LMultiplier[ftSide].MomentJacobian = vWhlContactVec * LMultiplier[ftSide].ForceJacobian;
+    LMultiplier[ftRoll].jac2 = mT * FGColumnVector3(1.,0.,0.);
+    LMultiplier[ftSide].jac2 = mT * FGColumnVector3(0.,1.,0.);
+    LMultiplier[ftRoll].jac3 = vTerrainContactVec * LMultiplier[ftRoll].jac2;
+    LMultiplier[ftSide].jac3 = vTerrainContactVec * LMultiplier[ftSide].jac2;
+    LMultiplier[ftRoll].jac0 = -1.0 * LMultiplier[ftRoll].jac2;
+    LMultiplier[ftSide].jac0 = -1.0 * LMultiplier[ftSide].jac2;
+    LMultiplier[ftRoll].jac1 = vWhlContactVec * LMultiplier[ftRoll].jac0;
+    LMultiplier[ftSide].jac1 = vWhlContactVec * LMultiplier[ftSide].jac0;
 
+
+    
     switch(eContactType) {
     case ctBOGEY:
       LMultiplier[ftRoll].Max = fabs(BrakeFCoeff * vFn(eZ));
@@ -752,7 +766,7 @@ void FGLGear::UpdateForces(void)
     vFn(eY) = LMultiplier[ftSide].value;
   }
   else {
-    FGColumnVector3 forceDir = mT.Transposed() * LMultiplier[ftDynamic].ForceJacobian;
+    FGColumnVector3 forceDir = mT.Transposed() * LMultiplier[ftDynamic].jac0;
     vFn(eX) = LMultiplier[ftDynamic].value * forceDir(eX);
     vFn(eY) = LMultiplier[ftDynamic].value * forceDir(eY);
   }

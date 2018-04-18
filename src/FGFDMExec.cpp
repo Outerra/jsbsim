@@ -1225,6 +1225,17 @@ void FGFDMExec::Debug(int from)
     }
   }
 }
+
+void FGFDMExec::RedirectStdOutput(std::ostream * cout_buf, std::ostream * cerr_buf) {
+    if (cout_buf) {
+        cout.rdbuf(cout_buf->rdbuf());
+    }
+
+    if (cerr_buf) {
+        cerr.rdbuf(cerr_buf->rdbuf());
+    }
+}
+
 }
 
 

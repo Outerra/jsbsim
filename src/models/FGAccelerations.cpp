@@ -250,7 +250,100 @@ void FGAccelerations::SetHoldDown(bool hd)
 
 void FGAccelerations::ResolveFrictionForces(double dt)
 {
-  const double invMass = 1.0 / in.Mass;
+	const double invMass = 1.0 / in.Mass;
+	const FGMatrix33& Jinv = in.Jinv;
+	FGColumnVector3 vdot, wdot;
+	vector<LagrangeMultiplier*>& multipliers = *in.MultipliersList;
+	size_t n = multipliers.size();
+
+	vFrictionForces.InitMatrix();
+	vFrictionMoments.InitMatrix();
+
+	// If no gears are in contact with the ground then return
+	if (!n) return;
+
+	vector<double> a(n*n); // Will contain Jac*M^-1*Jac^T
+	vector<double> rhs(n);
+
+	for (unsigned int i = 0; i < n; i++) {
+		FGColumnVector3 v0 = invMass * multipliers[i]->jac0;
+		FGColumnVector3 v1 = Jinv * multipliers[i]->jac1;
+        FGColumnVector3 v2 = multipliers[i]->surface_inv_mass * multipliers[i]->jac2;
+        FGColumnVector3 v3 = multipliers[i]->surface_inv_J * multipliers[i]->jac3; // Should be J^-T but J is symmetric and so is J^-1
+
+
+		for (unsigned int j = 0; j < i; j++)
+			a[i*n + j] = a[j*n + i]; // Takes advantage of the symmetry of Jac^T*M^-1*Jac
+        for (unsigned int j = i; j < n; j++)
+            a[i*n + j] = DotProduct(v0, multipliers[j]->jac0)
+            + DotProduct(v1, multipliers[j]->jac1)
+            + DotProduct(v2, multipliers[j]->jac2)
+            + DotProduct(v3, multipliers[j]->jac3);
+	}
+
+    // Assemble the RHS member
+
+    // Translation
+    vdot = vUVWdot;
+
+    // Rotation
+    wdot = vPQRdot;
+
+    // Prepare the linear system for the Gauss-Seidel algorithm :
+    // 1. Compute the right hand side member 'rhs'
+    // 2. Divide every line of 'a' and 'rhs' by a[i,i]. This is in order to save
+    //    a division computation at each iteration of Gauss-Seidel.
+    for (unsigned int i = 0; i < n; i++) {
+        double d = 1.0 / a[i*n + i];
+
+        rhs[i] = -(DotProduct(multipliers[i]->jac0, dt > 0. ? vdot + in.vUVW/ dt : vdot)
+            + DotProduct(multipliers[i]->jac1, dt > 0. ?  wdot + in.vPQR / dt: wdot)
+            + (dt > 0. ? DotProduct(multipliers[i]->jac2, multipliers[i]->surface_linear_velocity/ dt) : 0.0)
+            + (dt > 0. ? DotProduct(multipliers[i]->jac3, multipliers[i]->surface_angular_velocity/ dt) : 0.0)
+            )*d;
+        for (unsigned int j = 0; j < n; j++)
+            a[i*n + j] *= d;
+    }
+
+    // Resolve the Lagrange multipliers with the projected Gauss-Seidel method
+    for (int iter = 0; iter < 50; iter++) {
+        double norm = 0.;
+
+        for (unsigned int i = 0; i < n; i++) {
+            double lambda0 = multipliers[i]->value;
+            double dlambda = rhs[i];
+
+            for (unsigned int j = 0; j < n; j++)
+                dlambda -= a[i*n + j] * multipliers[j]->value;
+
+            multipliers[i]->value = Constrain(multipliers[i]->Min, lambda0 + dlambda, multipliers[i]->Max);
+            dlambda = multipliers[i]->value - lambda0;
+
+            norm += fabs(dlambda);
+        }
+
+        if (norm < 1E-5) break;
+    }
+
+    // Calculate the total friction forces and moments
+
+    for (unsigned int i = 0; i< n; i++) {
+        double lambda = multipliers[i]->value;
+        vFrictionForces += lambda * multipliers[i]->jac0;
+        vFrictionMoments += lambda * multipliers[i]->jac1;
+    }
+
+    FGColumnVector3 accel = invMass * vFrictionForces;
+    FGColumnVector3 omegadot = Jinv * vFrictionMoments;
+
+    vBodyAccel += accel;
+    vUVWdot += accel;
+    vUVWidot += in.Tb2i * accel;
+    vPQRdot += omegadot;
+    vPQRidot += omegadot;
+
+
+ /* const double invMass = 1.0 / in.Mass;
   const FGMatrix33& Jinv = in.Jinv;
   FGColumnVector3 vdot, wdot;
   vector<LagrangeMultiplier*>& multipliers = *in.MultipliersList;
@@ -278,7 +371,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   }
 
   // Assemble the RHS member
-
+  
   // Translation
   vdot = vUVWdot;
   
@@ -334,7 +427,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   vUVWdot += accel;
   vUVWidot += in.Tb2i * accel;
   vPQRdot += omegadot;
-  vPQRidot += omegadot;
+  vPQRidot += omegadot;*/
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

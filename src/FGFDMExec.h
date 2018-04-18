@@ -602,6 +602,8 @@ public:
   */
   bool GetHoldDown(void) const {return HoldDown;}
 
+  static void RedirectStdOutput(std::ostream * cout_buf, std::ostream * cerr_buf);
+
 private:
   int Error;
   unsigned int Frame;

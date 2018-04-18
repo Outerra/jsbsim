@@ -31,6 +31,8 @@ SENTRY
 #define LAGRANGEMULTIPLIER_H
 
 #include "JSBSim_api.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -57,13 +59,25 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 struct JSBSIM_API LagrangeMultiplier {
-  FGColumnVector3 TerrainLinearVelocity;
-  FGColumnVector3 TerrainAngularVelocity;
-  FGColumnVector3 ForceJacobian;
-  FGColumnVector3 MomentJacobian;
-  double Min;
-  double Max;
-  double value;
+  //FGColumnVector3 TerrainLinearVelocity;
+  //FGColumnVector3 TerrainAngularVelocity;
+  //FGColumnVector3 ForceJacobian;
+  //FGColumnVector3 MomentJacobian;
+    //FGColumnVector3 u;                              /// Constraint direction
+    //FGColumnVector3 r1;                             /// Plane to contact vector
+    //FGColumnVector3 r2;                             /// Terrain( or some rigid body) to contact vector 
+    //
+    FGColumnVector3 jac0;                           /// -u
+    FGColumnVector3 jac1;                           /// -r1 x u
+    FGColumnVector3 jac2;                           /// u
+    FGColumnVector3 jac3;                           /// r2 x u
+    FGColumnVector3 surface_linear_velocity;        /// Contact surface linear velocity
+    FGColumnVector3 surface_angular_velocity;       /// Contact surface angular veloty
+    double surface_inv_mass;                        /// Inverse mass of contact surface body
+    FGMatrix33 surface_inv_J;                       /// Inverse tensor of inertia of contact surface body
+    double Min;
+    double Max;
+    double value;
 };
 
 } // namespace

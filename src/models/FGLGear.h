@@ -390,7 +390,7 @@ private:
   void ComputeSideForceCoefficient(void);
   void ComputeVerticalStrutForce(void);
   void ComputeGroundFrame(void);
-  void ComputeJacobian(const FGColumnVector3& vWhlContactVec);
+  void ComputeJacobian(const FGColumnVector3& vWhlContactVec, const FGColumnVector3& vTerrainContactVec);
   void UpdateForces(void);
   void SetstaticFCoeff(double coeff);
   void CrashDetect(void);

@@ -70,7 +70,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,TrimMode tt)
   max_iterations=60;
   max_sub_iterations=100;
   Tolerance=1E-3;
-  A_Tolerance = Tolerance / 10;
+  A_Tolerance = Tolerance * 10;
 
   Debug=0;DebugLevel=0;
   fdmex=FDMExec;
