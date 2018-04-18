@@ -696,7 +696,7 @@ void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec, const FGCol
     velocityDirection(eZ) = 0.;
     velocityDirection.Normalize();
 
-    LMultiplier[ftDynamic].jac2 = mT * velocityDirection;
+    LMultiplier[ftDynamic].jac2 = mT * velocityDirection * -1.0;
     LMultiplier[ftDynamic].jac3 = vTerrainContactVec * LMultiplier[ftDynamic].jac2 ;
     LMultiplier[ftDynamic].jac0 = -1.0 * LMultiplier[ftDynamic].jac2;
     LMultiplier[ftDynamic].jac1 = vWhlContactVec * LMultiplier[ftDynamic].jac0;
