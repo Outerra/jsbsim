@@ -404,9 +404,9 @@ void FGTrim::trimOnGround(void)
     FGMatrix33 mDummy;
     double dDummy;
 
-    double height = gearLoc.GetContactPoint(hmin, lDummy, normal, vDummy, vDummy,vDummy,dDummy,mDummy);
+    double height = gearLoc.GetContactPoint(100.0f, lDummy, normal, vDummy, vDummy,vDummy,dDummy,mDummy);
 
-    if (gear->IsBogey() && !GroundReactions->GetSolid())
+    if (gear->IsBogey() && !GroundReactions->GetSolid() || height >= 100.0f)
       continue;
 
     c.normal = Tec2b * normal;
@@ -418,6 +418,10 @@ void FGTrim::trimOnGround(void)
     }
   }
 
+
+  if (contactRef == -1) {
+      return;
+  }
   // Remove the contact point that is closest to the ground from the list:
   // the rotation axis will be going thru this point so we need to remove it
   // to avoid divisions by zero that could result from the computation of
