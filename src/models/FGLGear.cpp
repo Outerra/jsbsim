@@ -643,7 +643,8 @@ void FGLGear::ComputeVerticalStrutForce()
 
     }
 
-    StrutForce = min(springForce + dampForce, (double)0.0);
+    //StrutForce = min(springForce + dampForce, (double)0.0);
+    StrutForce = eContactType == ctBOGEY ? springForce + dampForce : min(springForce + dampForce, (double)0.0);
     if (StrutForce > maximumForce) {
       StrutForce = maximumForce;
       compressLength = -StrutForce / kSpring;
