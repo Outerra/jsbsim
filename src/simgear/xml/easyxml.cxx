@@ -267,7 +267,7 @@ void readXML (istream &input, XMLVisitor &visitor, const string &path)
       visitor.setParser(0);
       XML_ParserFree(parser);
       cerr << "Problem reading input file " << path << endl;
-      exit(-1);
+      throw std::runtime_error("Problem reading input file" + path);
     }
 
     input.read(buf,16384);
@@ -278,7 +278,7 @@ void readXML (istream &input, XMLVisitor &visitor, const string &path)
            << endl;
       visitor.setParser(0);
       XML_ParserFree(parser);
-      exit(-1);
+      throw std::runtime_error("XML parse error" + path);
     }
 
   }
@@ -290,7 +290,7 @@ void readXML (istream &input, XMLVisitor &visitor, const string &path)
          << endl;
     visitor.setParser(0);
     XML_ParserFree(parser);
-    exit(-1);
+    throw std::runtime_error("XML parse error" + path);
   }
 
   visitor.setParser(0);
@@ -304,16 +304,9 @@ void readXML (const string &path, XMLVisitor &visitor)
 {
   ifstream input(path.c_str());
   if (input.good()) {
-    try {
-      readXML(input, visitor, path);
-    } catch (...) {
-      input.close();
-      cerr << "Failed to open file " << path << endl;
-      abort();
-    }
+    readXML(input, visitor, path);
   } else {
-    cerr << "Failed to open file " << path << endl;
-    abort();
+    throw std::runtime_error("Failed to open file " + path);
   }
   input.close();
 }
