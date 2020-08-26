@@ -300,19 +300,19 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
     const double maxdist = 20; //ft
     double height = gearLoc.GetContactPoint(maxdist, contact, normal, terrainVel, terrainVelAng,terrainPos,terrainMassInv,terrainJInv);
 
-	
+
     LMultiplier[ftRoll].surface_linear_velocity = in.Tec2b * terrainVel;
     LMultiplier[ftSide].surface_linear_velocity = LMultiplier[ftRoll].surface_linear_velocity;
     LMultiplier[ftDynamic].surface_linear_velocity = LMultiplier[ftRoll].surface_linear_velocity;
     LMultiplier[ftRoll].surface_angular_velocity = in.Tec2b * terrainVelAng;
     LMultiplier[ftSide].surface_angular_velocity = LMultiplier[ftRoll].surface_angular_velocity;
     LMultiplier[ftDynamic].surface_angular_velocity = LMultiplier[ftRoll].surface_angular_velocity;
-	LMultiplier[ftRoll].surface_inv_mass = terrainMassInv;
-	LMultiplier[ftSide].surface_inv_mass = terrainMassInv;
-	LMultiplier[ftDynamic].surface_inv_mass = terrainMassInv;
-	LMultiplier[ftRoll].surface_inv_J = terrainJInv;
-	LMultiplier[ftSide].surface_inv_J = terrainJInv;
-	LMultiplier[ftDynamic].surface_inv_J = terrainJInv;
+    LMultiplier[ftRoll].surface_inv_mass = terrainMassInv;
+    LMultiplier[ftSide].surface_inv_mass = terrainMassInv;
+    LMultiplier[ftDynamic].surface_inv_mass = terrainMassInv;
+    LMultiplier[ftRoll].surface_inv_J = terrainJInv;
+    LMultiplier[ftSide].surface_inv_J = terrainJInv;
+    LMultiplier[ftDynamic].surface_inv_J = terrainJInv;
 
     // Does this surface contact point interact with another surface?
     if (surface) {
@@ -643,7 +643,8 @@ void FGLGear::ComputeVerticalStrutForce()
 
     }
 
-    StrutForce = min(springForce + dampForce, (double)0.0);
+    //StrutForce = min(springForce + dampForce, (double)0.0);
+    StrutForce = eContactType == ctBOGEY ? springForce + dampForce : min(springForce + dampForce, (double)0.0);
     if (StrutForce > maximumForce) {
       StrutForce = maximumForce;
       compressLength = -StrutForce / kSpring;
@@ -728,7 +729,7 @@ void FGLGear::ComputeJacobian(const FGColumnVector3& vWhlContactVec, const FGCol
     LMultiplier[ftSide].jac1 = vWhlContactVec * LMultiplier[ftSide].jac0;
 
 
-    
+
     switch(eContactType) {
     case ctBOGEY:
       LMultiplier[ftRoll].Max = fabs(BrakeFCoeff * vFn(eZ));
