@@ -116,7 +116,7 @@ unsigned int FGJSBBase::messageId = 0;
 
 int FGJSBBase::gaussian_random_number_phase = 0;
 
-short FGJSBBase::debug_lvl  = 1;
+short FGJSBBase::debug_lvl  = 0;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

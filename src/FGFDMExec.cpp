@@ -122,8 +122,8 @@ FGFDMExec::FGFDMExec(
   try {
     char* num = getenv("JSBSIM_DEBUG");
     if (num) debug_lvl = atoi(num); // set debug level
-  } catch (...) {                   // if error set to 1
-    debug_lvl = 1;
+  } catch (...) {                   // if error set to 0
+    debug_lvl = 0;
   }
 
   if (Root == 0) {                 // Then this is the root FDM
